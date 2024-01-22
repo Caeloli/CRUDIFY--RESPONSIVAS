@@ -1,0 +1,16 @@
+
+@import "../../../../assets/styles/variables.scss";
+
+.card{
+    height: 10rem !important;
+    border-color: $secondary-color !important;
+    .card-body{
+        display: flex;
+        flex-direction: column;
+        justify-content: space-around;
+        color: $secondary-color;
+        .card-title, .card-text{
+            font-weight: bold;
+        }
+    }
+}

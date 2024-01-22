@@ -1,0 +1,41 @@
+@import "../../../assets/styles/mixins.scss";
+
+.column-fixed-left {
+  position: sticky;
+  left: 0;
+  background-color: #f8f9fa;
+  z-index: 1;
+}
+
+.column-fixed-right {
+  position: sticky;
+  right: 0;
+  background-color: #f8f9fa;
+  z-index: 1;
+}
+
+.bg-red {
+  background-color: red;
+}
+
+.custom-table-crud-responsives {
+  font-size: 0.9rem;
+  .fixed-width {
+    width: 4rem;
+  }
+  td {
+    text-align: center;
+  }
+}
+
+@include desktop {
+  .custom-table-crud-responsives {
+    font-size: 0.9rem;
+    .fixed-width {
+      width: 7rem;
+    }
+    td {
+      text-align: center;
+    }
+  }
+}

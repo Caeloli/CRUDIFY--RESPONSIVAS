@@ -1,0 +1,14 @@
+@import "../../../assets/styles/variables.scss"; 
+@import "../../../assets/styles/mixins.scss"; 
+
+.responsive-crud__btn {
+  display: flex;
+  @include desktop{
+    display: flex;
+    justify-content: flex-end;  
+  }
+}
+
+
+
+
