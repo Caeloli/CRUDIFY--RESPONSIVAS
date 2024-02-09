@@ -9,8 +9,7 @@ const AuditLog = (sequelize) => {
         primaryKey: true,
         autoIncrement: true,
       },
-
-      resp_id_fk: {
+      file_id_fk: {
         type: DataTypes.INTEGER,
         references: {
           model: "responsive_files",
@@ -18,7 +17,6 @@ const AuditLog = (sequelize) => {
         },
         allowNull: false,
       },
-
       user_id_fk: {
         type: DataTypes.INTEGER,
         references: {
@@ -27,7 +25,6 @@ const AuditLog = (sequelize) => {
         },
         allowNull: false,
       },
-
       action_id_fk: {
         type: DataTypes.INTEGER,
         references: {
@@ -36,20 +33,17 @@ const AuditLog = (sequelize) => {
         },
         allowNull: false,
       },
-
       details: {
         type: DataTypes.JSONB,
         allowNull: false,
         defaultValue: {},
       },
-
       date: {
         type: DataTypes.DATE,
         allowNull: false,
         defaultValue: DataTypes.NOW,
         timezone: true,
       },
-
       additional_details: {
         type: DataTypes.JSONB,
         allowNull: false,

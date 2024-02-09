@@ -14,6 +14,10 @@ const User = (sequelize) => {
         allowNull: false,
         unique: true,
       },
+      pswrd: {
+        type: DataTypes.STRING(90),
+        allowNull: true,
+      },
       //can only be 1 or 2
       user_type_id_fk: {
         type: DataTypes.INTEGER,

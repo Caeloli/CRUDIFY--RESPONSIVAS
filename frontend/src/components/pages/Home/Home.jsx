@@ -4,12 +4,19 @@ import { TableContainer } from "../../common/Tables/Table/TableContainer";
 import { CardsHomeContainer } from "./CardsHome/CardsHomeContainer";
 import { DisplayTableHomeContainer } from "./DisplayTableHome/DisplayTableHomeContainer";
 import { DisplayTableLogContainer } from "./DisplayTableLog/DisplayTableLogContainer";
-import { deleteResponsive, getAllResponsive } from "../../../services/api";
+import {
+  deleteResponsive,
+  getAllAuditLogs,
+  getAllResponsive,
+  postRestoreFileAuthReq,
+} from "../../../services/api";
 import { DeleteModalContainer } from "../../common/Modals/DeleteModal/DeleteModalContainer";
 import { FailModalContainer } from "../../common/Modals/FailModal/FailModalContainer";
 
 export function Home() {
   const [responsiveData, setResponsiveData] = useState(null);
+  const [cardResponsiveData, setCardResponsiveData] = useState(null);
+  const [auditLogData, setAuditLogData] = useState(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [activeIDRegister, setActiveIDRegister] = useState(null);
   const [showFailModal, setShowFailModal] = useState(false);
@@ -17,10 +24,23 @@ export function Home() {
   useEffect(() => {
     const fetchResponsiveData = async () => {
       const result = await getAllResponsive();
-      setResponsiveData(result);
+      console.log("RESULT: ", result);
+      const filteredCardResult = result.filter(
+        (item) => item.state_id_fk != 5
+      )
+      setCardResponsiveData(filteredCardResult);
+      const filteredResponsiveResult = result.filter(
+        (item) => item.state_id_fk === 2 || item.state_id_fk === 4
+      );
+      setResponsiveData(filteredResponsiveResult);
     };
 
+    const fetchAuditLogData = async () => {
+      const result = await getAllAuditLogs();
+      setAuditLogData(result);
+    };
     fetchResponsiveData();
+    fetchAuditLogData();
   }, [update]);
 
   const handleDelete = async () => {
@@ -28,7 +48,6 @@ export function Home() {
       const result = await deleteResponsive(activeIDRegister);
       if (!result.error) {
         setUpdate(!update);
-        
       } else {
         console.log("Error, envio falso");
         setShowFailModal(true);
@@ -51,18 +70,22 @@ export function Home() {
     setShowFailModal(false);
   };
 
-  const tableData = [
-    { id: 1, name: "Item 1", price: 10 },
-    { id: 2, name: "Item 2", price: 20 },
-    { id: 3, name: "Item 3", price: 30 },
-  ];
+  const handleRestoreFile = async (id) => {
+    const result = await postRestoreFileAuthReq(id);
+    if (!result.error) {
+      setUpdate(!update);
+    } else {
+      console.log("Error, envio falso");
+      setShowFailModal(true);
+    }
+  };
 
   return (
     <Container>
       <Row>
         <Col>
-          {responsiveData && (
-            <CardsHomeContainer responsiveData={responsiveData} />
+          {cardResponsiveData && (
+            <CardsHomeContainer responsiveData={cardResponsiveData} />
           )}
         </Col>
       </Row>
@@ -70,13 +93,20 @@ export function Home() {
         <h4>Responsivas por Notificar</h4>
         <Col>
           {responsiveData && (
-            <DisplayTableHomeContainer data={responsiveData} handleShowDeleteModal={handleShowDeleteModal}/>
+            <DisplayTableHomeContainer
+              data={responsiveData}
+              handleShowDeleteModal={handleShowDeleteModal}
+            />
           )}
         </Col>
       </Row>
       <Row>
+        <h4>Responsivas Eliminadas</h4>
         <Col>
-          <DisplayTableLogContainer />
+          <DisplayTableLogContainer
+            data={auditLogData}
+            handleRestoreFile={handleRestoreFile}
+          />
         </Col>
       </Row>
       <DeleteModalContainer

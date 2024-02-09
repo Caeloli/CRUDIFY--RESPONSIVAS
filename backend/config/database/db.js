@@ -2,8 +2,8 @@ const { Pool } = require("pg");
 
 const dbConfigData = {
   host: "localhost",
-  user: "postgres",
-  password: "1234",
+  user: "pmrresp_super", //
+  password: "i7GD1FW0a9YrbmZN", //
   database: "pmrresp",
   port: "5432",
 };

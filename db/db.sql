@@ -31,6 +31,7 @@ CREATE TABLE
     users(
         user_id SERIAL PRIMARY KEY,
         email VARCHAR(60) NOT NULL,
+        pswrd VARCHAR(90) NOT NULL,
         user_type_id_fk INT REFERENCES user_type(user_type_id)
     );
 
@@ -72,37 +73,37 @@ CREATE TABLE
         file_unique_name VARCHAR(200) NOT NULL
     );
 
-CREATE TABLE
-    audit_log(
-        log_id SERIAL PRIMARY KEY,
-        file_id_fk INT REFERENCES responsive_files(resp_id) NOT NULL,
-        user_id_fk INT REFERENCES users(user_id) NOT NULL,
-        action_id_fk INT REFERENCES actions(action_id) NOT NULL,
-        details JSON NOT NULL,
-        date TIMESTAMP NOT NULL,
-        additional_details JSONB DEFAULT '{}'
-    );
+CREATE TABLE audit_log (
+    log_id SERIAL PRIMARY KEY,
+    file_id_fk INT NOT NULL REFERENCES responsive_files(resp_id) ON DELETE CASCADE,
+    user_id_fk INT REFERENCES users(user_id),
+    action_id_fk INT NOT NULL REFERENCES actions(action_id),
+    details JSON NOT NULL DEFAULT '{}',
+    date TIMESTAMP NOT NULL,
+    additional_details JSONB DEFAULT '{}'
+);
 
 
 
 CREATE TABLE
     authorization_request(
         request_id SERIAL PRIMARY KEY,
-        user_id_fk INT REFERENCES users(user_id) NOT NULL,
-        action_id_fk INT REFERENCES actions(action_id),
+        user_id_fk INT REFERENCES users(user_id) NULL,
+        action_id_fk INT REFERENCES actions(action_id) NULL,
         request_date TIMESTAMP NOT NULL,
         affected_user_id INT NULL,
         affected_email VARCHAR(50) NULL,
-        affected_type INT NULL
+        affected_type INT NULL,
+        chat_id VARCHAR(30) NULL
     );
 
 
 
-CREATE TABLE
-    authorization_allow(
+CREATE TABLE 
+    authorization_allow (
         allow_id SERIAL PRIMARY KEY,
-        request_id_fk INT REFERENCES authorization_request(request_id) NOT NULL,
-        user_id_fk INT REFERENCES users(user_id) NOT NULL,
+        request_id_fk INT REFERENCES authorization_request(request_id) ON DELETE CASCADE,
+        user_id_fk INT REFERENCES users(user_id) ON DELETE CASCADE,
         is_allowed BOOLEAN NOT NULL
     );
 
@@ -119,7 +120,7 @@ CREATE OR REPLACE FUNCTION SET_RESPONSIVE_FILES_STATE
 () RETURNS TRIGGER AS
 	$set_responsive_files_state$ 
 	BEGIN DECLARE days_difference INT;
-	BEGIN days_difference := EXTRACT(EPOCH FROM (NEW.end_date - NEW.start_date)) / (24 * 60 * 60)::INT;
+	BEGIN days_difference := EXTRACT(EPOCH FROM (NEW.end_date - NOW())) / (24 * 60 * 60)::INT;
 	IF days_difference > 30 THEN NEW.state_id_fk := (
 	    SELECT state_id
 	    FROM states
@@ -151,11 +152,90 @@ DROP TRIGGER
 
 CREATE TRIGGER set_responsive_files_state
 	BEFORE
-	INSERT OR UPDATE
+	INSERT
 	    ON responsive_files FOR EACH ROW
 	EXECUTE
 	    FUNCTION SET_RESPONSIVE_FILES_STATE();
 
+
+CREATE OR REPLACE FUNCTION VERIFY_RESPONSIVE_FILES_STATE(p_resp_id INT)
+RETURNS VOID AS
+$verify_responsive_files_state$
+DECLARE
+    days_difference INT;
+    state_original_value INT;
+BEGIN
+    BEGIN
+        -- Retrieve days difference between end_date and current date
+        SELECT EXTRACT(EPOCH FROM (end_date - NOW())) / (24 * 60 * 60)::INT
+        INTO days_difference
+        FROM responsive_files
+        WHERE resp_id = p_resp_id;
+
+        -- Retrieve original state value
+        SELECT state_id_fk INTO state_original_value FROM responsive_files WHERE resp_id = p_resp_id;
+        
+        -- Debugging information
+        RAISE NOTICE 'Days Difference: %', days_difference;
+        RAISE NOTICE 'State: %', state_original_value;
+
+        -- Determine the new state based on the days difference
+        IF state_original_value = 5 THEN
+            RAISE NOTICE 'Updated to delete';
+        ElSIF state_original_value = 4 THEN
+            -- Update to 'notified' if expired
+            IF days_difference < 0 THEN 
+                RAISE NOTICE 'Updated to expired';
+                UPDATE responsive_files
+                SET state_id_fk = (SELECT state_id FROM states WHERE state_name = 'expired')
+                WHERE resp_id = p_resp_id;
+            END IF;
+        ELSIF days_difference > 30 THEN
+            -- Update to 'active'
+            RAISE NOTICE 'Updating to active';
+            UPDATE responsive_files
+            SET state_id_fk = (SELECT state_id FROM states WHERE state_name = 'active')
+            WHERE resp_id = p_resp_id;
+        ELSIF days_difference <= 30 AND days_difference > 0 THEN
+            -- Update to 'notify'
+            RAISE NOTICE 'Updating to notify';
+            UPDATE responsive_files
+            SET state_id_fk = (SELECT state_id FROM states WHERE state_name = 'notify')
+            WHERE resp_id = p_resp_id;
+        ELSE
+            -- Update to 'expired' if already notified
+            RAISE NOTICE 'Updating to expired';
+            UPDATE responsive_files
+            SET state_id_fk = (SELECT state_id FROM states WHERE state_name = 'expired')
+            WHERE resp_id = p_resp_id;
+        END IF;
+    EXCEPTION
+        WHEN OTHERS THEN
+            -- Handle any errors that may occur
+            RAISE EXCEPTION 'Error updating state for responsive file %: %', p_resp_id, SQLERRM;
+    END;
+END;
+$verify_responsive_files_state$ LANGUAGE plpgsql;
+
+
+
+CREATE OR REPLACE FUNCTION insert_authorization_allow()
+RETURNS TRIGGER AS $$
+BEGIN
+  INSERT INTO authorization_allow (request_id_fk, user_id_fk, is_allowed)
+  SELECT NEW.request_id, user_id, FALSE
+  FROM users
+  WHERE user_type_id_fk = 2;
+
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Create an AFTER INSERT trigger on the authorization_request table
+CREATE TRIGGER authorization_request_insert_trigger
+AFTER INSERT ON authorization_request
+FOR EACH ROW
+EXECUTE FUNCTION insert_authorization_allow();
 
 /*
  CREATE OR REPLACE FUNCTION schedule_update()

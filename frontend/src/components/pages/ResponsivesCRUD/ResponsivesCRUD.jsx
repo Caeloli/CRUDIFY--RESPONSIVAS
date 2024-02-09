@@ -10,7 +10,7 @@ import {
 } from "react-bootstrap";
 import { FaEye, FaEdit, FaTrash } from "react-icons/fa";
 import { FSPTableContainer } from "../../common/Tables/FSPTable/FSPTableContainer";
-import { makeData } from "../../../func/func";
+import { exportToExcelResponsivesCrud, makeData } from "../../../func/func";
 import "./ResponsivesCRUD.scss";
 import { Link, useNavigate } from "react-router-dom";
 import { deleteResponsive, getAllResponsive } from "../../../services/api";
@@ -67,6 +67,8 @@ function ResponsiveTableContainer({
                 ? "Notificar"
                 : state_id === 3
                 ? "Expirado"
+                : state_id === 4
+                ? "Notificado"
                 : "Se desconoce";
             },
             header: "Estado",
@@ -211,7 +213,9 @@ export function ResponsivesCRUD() {
     const fetchData = async () => {
       try {
         const responsives = await getAllResponsive();
-        setResponsiveData(responsives);
+        console.log("RESPONSIVAS: ", responsives);
+        const filteredResponsives = responsives.filter(responsive => responsive.state_id_fk !== 5 );
+        setResponsiveData(filteredResponsives);
       } catch (error) {
         console.error("Error fetching responsives: ", error);
       }
@@ -233,11 +237,9 @@ export function ResponsivesCRUD() {
       const result = await deleteResponsive(activeIDRegister);
       if (!result.error) {
         setUpdate(!update);
-        
       } else {
         console.log("Error, envio falso");
         setShowFailModal(true);
-        
       }
     }
     setShowDeleteModal(false);
@@ -271,7 +273,11 @@ export function ResponsivesCRUD() {
           <Col sm={12} md={6}>
             <Row>
               <Col className="responsive-crud__btn">
-                <Button >Generar .xlxs</Button>
+                {responsiveData && (
+                  <Button onClick={() => exportToExcelResponsivesCrud(responsiveData)}>
+                    Generar .xlxs
+                  </Button>
+                )}
               </Col>
               <Col className="responsive-crud__btn">
                 <Link to={"/FilesForm"}>

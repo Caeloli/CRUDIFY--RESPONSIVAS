@@ -1,21 +1,37 @@
 const express = require("express");
 const cors = require("cors");
 const path = require("path");
+require("dotenv").config();
 const cookieParser = require("cookie-parser");
+const jwt = require("jsonwebtoken");
 const logger = require("morgan");
-const config = require("./config/index")();
+const config = require("./config/index").configPort();
 process.env.PORT = config.port;
-
 const indexRouter = require("./routes/index");
 const routes = require("./routes/routes");
 const app = express();
+const bcrypt = require("bcrypt");
+const userController = require("./controller/usersController");
+const { verifyToken } = require("./utils/verifyJWTToken");
+const {startBot} = require("./services/bot/tbot");
+const initializeScheduler = require("./services/schedule/scheduler");
 
-app.use(cors());
+const salt = process.env.SALT;
+const sk = process.env.SK;
+
+app.use(
+  cors({
+    origin: "http://localhost:4000",
+    credentials: true,
+  })
+);
 app.use(logger("dev"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
-app.use(express.static(path.join(__dirname, "public")));
+//app.use(express.static(path.join(__dirname, "public")));
+app.use(express.static("build"));
+
 
 /*
 const { Pool } = require('pg');
@@ -40,7 +56,7 @@ const { Pool } = require('pg');
   const { Pool } = require("pg");
   const { dbConfigData } = require("./config/database/db");
   const pool = new Pool(dbConfigData);
-  console.log("Pool integrated");  
+  console.log("Pool integrated");
   pool.connect();
   console.log("Sequelize integrated");
   app.use((req, res, next) => {
@@ -50,7 +66,7 @@ const { Pool } = require('pg');
     }
     console.log("Enter in assignment of request methods");
     req.postgresdb = pool;
-    
+
     next();
   });
 })();
@@ -68,7 +84,55 @@ const { Pool } = require('pg');
     }
   });
   */
+app.post("/login", async (req, res) => {
+  const { user, password } = req.body;
+  try {
+    //const hashedPassword = await bcrypt.hash(password, salt);
+    const userStored = await userController.getUserByEmail(user);
+    if (!userStored) {
+      return res.status(404).json({ message: "User not found" });
+    }
 
-app.use("/pmx-resp", routes);
+    const passwordMatch = await bcrypt.compare(password, userStored.pswrd);
+    if (passwordMatch) {
+      const token = jwt.sign(
+        { user_id: userStored.user_id, email: userStored.email },
+        sk,
+        {
+          expiresIn: "1h",
+        }
+      );
+      return res
+        .status(200)
+        .json(token);
+    } else {
+      return res.status(401).json({ message: "Incorrect credentials" });
+    }
+  } catch (error) {
+    console.error("Error during login:", error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+app.get("/verify-token", async (req, res) => {
+  const token = req.headers.authorization?.split(' ')[1]; // Extract the token from the Authorization header
+  if (!token) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+
+  try {
+    const decoded = await jwt.verify(token, sk);
+    return res.status(200).json({ message: "Authorized", user: decoded });
+  } catch (error) {
+    if (error.name === "TokenExpiredError") {
+      return res.status(401).json({ message: "Token expired" });
+    }
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+});
+
+app.use("/pmx-resp",  routes);
+startBot();
+initializeScheduler();
 
 module.exports = app;

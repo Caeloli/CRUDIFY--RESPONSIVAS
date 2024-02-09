@@ -20,11 +20,18 @@ const db = {};
   db.user = await require("../../model/usersModel")(sequelize);
   db.actions = await require("../../model/actionModel")(sequelize);
   db.auditLog = await require("../../model/auditLogModel")(sequelize);
-  db.responsiveFiles = await require("../../model/responsiveFileModel")(sequelize);
+  db.responsiveFiles = await require("../../model/responsiveFileModel")(
+    sequelize
+  );
   db.states = await require("../../model/statesModel")(sequelize);
-  db.authorizationAllow = await require("../../model/authorizationAllowModel")(sequelize);
-  db.authorizationRequest = await require("../../model/authorizationRequestModel")(sequelize);
+  db.authorizationAllow = await require("../../model/authorizationAllowModel")(
+    sequelize
+  );
+  db.authorizationRequest =
+    await require("../../model/authorizationRequestModel")(sequelize);
   db.files = await require("../../model/fileModel")(sequelize);
   db.servers = await require("../../model/serversModel")(sequelize);
+  db.emailsNotify = await require("../../model/emailsNotifyModel")(sequelize);
 })();
+
 module.exports = db;

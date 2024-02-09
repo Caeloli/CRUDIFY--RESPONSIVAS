@@ -12,7 +12,7 @@ const AuthorizationAllow = (sequelize) => {
       request_id_fk: {
         type: DataTypes.INTEGER,
         references: {
-          model: "authorization_request",
+          model: "AuthorizationRequest",
           key: "request_id",
         },
         allowNull: false,
@@ -36,5 +36,6 @@ const AuthorizationAllow = (sequelize) => {
     }
   );
 };
+
 
 module.exports = AuthorizationAllow;

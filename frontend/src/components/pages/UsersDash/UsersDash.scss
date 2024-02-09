@@ -1,0 +1,9 @@
+@import "../../../assets/styles/variables.scss";
+@import "../../../assets/styles/mixins.scss";
+
+.userdash-nav-tab{
+    border-color: $primary-color !important;
+    a{
+        color: $primary-color !important
+    }
+}

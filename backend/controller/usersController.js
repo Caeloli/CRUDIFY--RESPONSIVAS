@@ -1,7 +1,6 @@
 const db = require("../config/database/sequelize");
 
 const insertUser = async (userData) => {
-
   try {
     const User = db.user;
     const result = await User.create(userData);
@@ -54,6 +53,23 @@ const getAllUsers = async () => {
   }
 };
 
+const getUserByEmail = async (email) => {
+  try {
+    const User = db.user;
+    const user = await User.findOne({
+      where: {
+        email: email,
+      },
+    });
+
+    // Return the user object or null if not found
+    return user;
+  } catch (error) {
+    console.error("Error retrieving user", error);
+    return error;
+  }
+};
+
 const getUser = async (userId) => {
   try {
     const User = db.user;
@@ -76,4 +92,5 @@ module.exports = {
   deleteUser,
   getAllUsers,
   getUser,
+  getUserByEmail,
 };

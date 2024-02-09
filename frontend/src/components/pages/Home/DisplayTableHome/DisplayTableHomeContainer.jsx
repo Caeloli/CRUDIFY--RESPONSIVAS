@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { makeData } from "../../../../func/func";
 import { FaEye, FaEdit, FaTrash } from "react-icons/fa";
 import { TableContainer } from "../../../common/Tables/Table/TableContainer";
@@ -7,7 +7,9 @@ import { useNavigate } from "react-router-dom";
 export function DisplayTableHomeContainer({ data, handleShowDeleteModal }) {
   //const [data, setData] = useState(() => makeData(10));
   //const refreshData = () => setData(() => makeData(10));
+  const [dataNotify, setDataNotify] = useState(null);
   const navigate = useNavigate();
+
   const handleView = (id) => {
     navigate(`/FilesForm/${id}`);
   };
@@ -58,6 +60,8 @@ export function DisplayTableHomeContainer({ data, handleShowDeleteModal }) {
           ? "Notificar"
           : state_id === 3
           ? "Expirado"
+          : state_id === 4 
+          ? "Notificado"
           : "Se desconoce";
       },
       header: "Estado",

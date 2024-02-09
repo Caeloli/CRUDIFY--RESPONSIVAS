@@ -7,9 +7,9 @@ import NavDropdown from "react-bootstrap/NavDropdown";
 import Offcanvas from "react-bootstrap/Offcanvas";
 import { Link } from "react-router-dom";
 import { FaFileAlt, FaMobileAlt, FaUser, FaHome } from "react-icons/fa";
-import { IoSettingsSharp } from "react-icons/io5";
+import { IoSettingsSharp, IoExitOutline } from "react-icons/io5";
 import "./Navbar.scss";
-export function NavbarView() {
+export function NavbarView({handleLogOut}) {
   return (
     <>
       <Navbar
@@ -79,7 +79,7 @@ export function NavbarView() {
                     <p className="m-0">Usuarios</p>
                   </Link>
                 </NavItem>
-                <NavItem>
+                {/*<NavItem>
                   <Link
                     to={"/Settings"}
                     className="d-flex gap-1 align-items-center"
@@ -87,6 +87,18 @@ export function NavbarView() {
                     <IoSettingsSharp />
 
                     <p className="m-0">Configuración</p>
+                  </Link>
+                </NavItem> */}
+              </Nav>
+              <Nav>
+                <NavItem>
+                  <Link 
+                  className="d-flex gap-1 align-items-center" 
+                  onClick={handleLogOut}
+                  to={"/Login"}
+                  >
+                    <IoExitOutline />
+                    <p className="m-0">Cerrar Sesión</p>
                   </Link>
                 </NavItem>
               </Nav>

@@ -23,6 +23,23 @@
   }
 }
 
+.bg-cherry{
+  background-color: $primary-color !important;
+}
+
+.bg-cherry-light{
+  background-color: $primary-color-lighter !important;
+}
+
+.bg-green{
+ background-color: $secondary-color !important;
+}
+
+.bg-green-light{
+  background-color: $secondary-color-lighter !important;
+}
+
+
 .App-header {
   background-color: #282c34;
   min-height: 100vh;

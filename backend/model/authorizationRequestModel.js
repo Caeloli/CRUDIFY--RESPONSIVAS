@@ -48,6 +48,10 @@ const AuthorizationRequest = (sequelize) => {
         type: DataTypes.INTEGER,
         allowNull: true,
       },
+      chat_id: {
+        type: DataTypes.STRING(30),
+        allowNull: true,
+      }
     },
     {
       tableName: "authorization_request",

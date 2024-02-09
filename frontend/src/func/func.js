@@ -1,6 +1,7 @@
 import { faker } from "@faker-js/faker";
 import { useState } from "react";
-
+import * as XLSX from "xlsx";
+import { jwtDecode } from "jwt-decode";
 const range = (len) => {
   const arr = [];
   for (let i = 0; i < len; i++) {
@@ -53,4 +54,68 @@ export function makeData(...lens) {
   };
 
   return makeDataLevel();
+}
+
+// Convert string to ArrayBuffer
+function s2ab(s) {
+  const buf = new ArrayBuffer(s.length);
+  const view = new Uint8Array(buf);
+  for (let i = 0; i !== s.length; ++i) view[i] = s.charCodeAt(i) & 0xff;
+  return buf;
+}
+
+export function exportToExcelResponsivesCrud(data) {
+  const dataForExcel = data.map((item) => ({
+    "Response ID": item.resp_id,
+    Estado:
+      item.state_id_fk === 1
+        ? "Activa"
+        : item.state_id_fk === 2
+        ? "Notificar"
+        : item.state_id_fk === 3
+        ? "Expirada"
+        : item.state_id_fk === 4
+        ? "Notificado"
+        : "Se desconoce",
+    Usuario: item.user_name,
+    "Correo Electrónico": item.email,
+    Teléfono: item.phone,
+    "Jefe Inmediato": item.immediately_chief,
+    Remedy: item.remedy,
+    Token: item.token,
+    "Fecha Inicio": item.start_date,
+    "Fecha Fin": item.end_date,
+    Formato: item.file_format,
+  }));
+
+  // Create a worksheet
+  const ws = XLSX.utils.json_to_sheet(dataForExcel);
+
+  // Create a workbook
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Sheet1");
+
+  // Generate binary Excel data
+  const excelBlob = XLSX.write(wb, {
+    bookType: "xlsx",
+    type: "binary",
+  });
+
+  // Create a Blob containing the Excel file
+  const blob = new Blob([s2ab(excelBlob)], {
+    type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  });
+
+  // Create a link element and trigger a download
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+
+  link.download = `responsivas_${new Date().getTime()}.xlsx`;
+  link.click();
+}
+
+export function decodeToken() {
+  const token = localStorage.getItem('jwt');
+  const decodedToken = jwtDecode(token);
+  return decodedToken;
 }
