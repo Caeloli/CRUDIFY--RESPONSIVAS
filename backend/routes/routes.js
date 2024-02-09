@@ -266,7 +266,7 @@ router.put("/responsive-file/:id", upload.single("file"), async (req, res) => {
   try {
     const id = req.params.id;
     const file = req.file;
-    const data = req.body.data;
+    const data = JSON.parse(req.body.data);
     console.log("El id es:", id);
     console.log("El file es:", file);
     console.log("DATA ES: ", data);
@@ -276,41 +276,71 @@ router.put("/responsive-file/:id", upload.single("file"), async (req, res) => {
     // Save the old PDF route for later deletion
     const oldPdfRoute = responsiveFile.file_route;
 
-    // Create and save the updated file
-    const filePath = path.join(__dirname, "..", "uploads", "responsive");
-    const uniqueName = utils.generateUniqueFileName(file.originalname);
-    fs.writeFileSync(path.join(filePath, uniqueName), file.buffer);
+    if (file) {
+      // Create and save the updated file
+      const filePath = path.join(__dirname, "..", "uploads", "responsive");
+      const uniqueName = utils.generateUniqueFileName(file.originalname);
+      fs.writeFileSync(path.join(filePath, uniqueName), file.buffer);
 
-    // Update file data in the database
-    const fileData = {
-      file_original_name: file.originalname,
-      file_unique_name: uniqueName,
-      resp_id_fk: responsiveFile.resp_id,
-    };
-    const fileDataStored = await fileController.updateFileByRespIDFK(
-      responsiveFile.resp_id,
-      fileData
-    );
+      // Update file data in the database
+      const fileData = {
+        file_original_name: file.originalname,
+        file_unique_name: uniqueName,
+        resp_id_fk: responsiveFile.resp_id,
+      };
+      const fileDataStored = await fileController.updateFileByRespIDFK(
+        responsiveFile.resp_id,
+        fileData
+      );
+      // Update responsive file data
+      const responsiveFileStored =
+        await responsiveFileController.updateResponsiveFile(id, {
+          ...data,
+          file_route: path.join(filePath, uniqueName),
+          user_id_fk: 1,
+        });
 
-    // Update responsive file data
-    const responsiveFileStored =
-      await responsiveFileController.updateResponsiveFile(id, {
-        ...JSON.parse(data),
-        file_route: path.join(filePath, uniqueName),
-        user_id_fk: 1,
+      // Delete the old file
+      console.log("Borrado archivo anterior");
+      try {
+        fs.unlinkSync(oldPdfRoute);
+      } catch (error) {
+        console.log("Old file wasn't deleted or found");
+      }
+      console.log("Envío de datos");
+      return res.status(200).json({
+        message: `Responsive File updated successfully with ID: ${responsiveFileStored.resp_id}`,
       });
-
-    // Delete the old file
-    console.log("Borrado archivo anterior");
-    try {
-      fs.unlinkSync(oldPdfRoute);
-    } catch (error) {
-      console.log("Old file wasn't deleted or found");
+    } else {
+      const servers = await serverController.getServersByRespIDFK(
+        responsiveFile.resp_id
+      );
+      //Delete servers
+      if (servers)
+        servers.forEach((server) => {
+          serverController.deleteServer(server.server_id);
+        });
+      //Create new servers
+      if (data.servers){
+        console.log("Insertar servidores: ", data.servers )
+        data.servers.forEach((server) => {
+          serverController.insertServer({
+            server_name: server.windows_server,
+            account: server.account,
+            domain: server.domain,
+            responsive_file_id_fk: data.resp_id,
+          });
+        });
+      }
+      const responsiveFileStored =
+        await responsiveFileController.updateResponsiveFile(id, {
+          ...data,
+          user_id_fk: 1,
+        });
+      return res.status(200).json({
+        message: `Responsive File updated successfully with ID: ${responsiveFileStored.resp_id}`,
+      });
     }
-    console.log("Envío de datos");
-    return res.status(200).json({
-      message: `Responsive File updated successfully with ID: ${responsiveFileStored.resp_id}`,
-    });
   } catch (error) {
     console.log("Error", error);
     return res
@@ -651,6 +681,5 @@ router.use(
   "/files",
   express.static(path.join(__dirname, "../uploads/responsive"))
 );
-
 
 module.exports = router;

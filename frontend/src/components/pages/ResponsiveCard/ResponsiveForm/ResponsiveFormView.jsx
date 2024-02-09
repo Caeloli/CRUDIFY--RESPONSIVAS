@@ -24,8 +24,6 @@ export function ResponsiveFormView({
   const [isSubmit, setIsSubmit] = useState(false);
   const [servers, setServers] = useState([]);
 
-  console.log("Modo insert", isInsertMode);
-
   const handleShowFileModal = () => {
     setShowFileModal(true);
   };

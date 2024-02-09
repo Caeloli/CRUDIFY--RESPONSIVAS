@@ -50,7 +50,7 @@ CREATE TABLE
         resp_id SERIAL PRIMARY KEY,
         user_id_fk INT REFERENCES users(user_id) NOT NULL,
         state_id_fk INT REFERENCES states(state_id),
-        files_fk INT REFERENCES files(files_id)
+        files_fk INT REFERENCES files(files_id),
         remedy VARCHAR(30) NOT NULL,
         token VARCHAR(30) NOT NULL,
         user_name VARCHAR(50) NOT NULL,

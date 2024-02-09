@@ -84,7 +84,7 @@ export function ResponsiveFormContainer({
 
   const handleSubmit = async (values, actions) => {
     console.log("Values", values);
-    
+
     const formData = new FormData();
     const data = Object.keys(values).reduce((acc, key) => {
       if (key !== "file") {
@@ -106,7 +106,6 @@ export function ResponsiveFormContainer({
       console.log("Error, envio falso");
       return false; // Error
     }
-    
   };
 
   const handleFileChange = (evt) => {
@@ -144,16 +143,18 @@ export function ResponsiveFormContainer({
   };
 
   return (
-    <ResponsiveFormView
-      key={JSON.stringify(initialValues)}
-      schema={ResponsiveSchema}
-      initialValues={initialValues}
-      handleSubmit={handleSubmit}
-      handleFileChange={handleFileChange}
-      isReadMode={isReadMode}
-      isUpdateMode={isUpdateMode}
-      isInsertMode={isInsertMode}
-      handleAutoResponsive={handleAutoResponsive}
-    />
+    <>
+      <ResponsiveFormView
+        key={JSON.stringify(initialValues)}
+        schema={ResponsiveSchema}
+        initialValues={initialValues}
+        handleSubmit={handleSubmit}
+        handleFileChange={handleFileChange}
+        isReadMode={isReadMode}
+        isUpdateMode={isUpdateMode}
+        isInsertMode={isInsertMode}
+        handleAutoResponsive={handleAutoResponsive}
+      />
+    </>
   );
 }

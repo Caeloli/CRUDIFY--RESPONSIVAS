@@ -21,7 +21,7 @@ const sk = process.env.SK;
 
 app.use(
   cors({
-    origin: "http://localhost:4000",
+    origin: ["http://localhost:3000", "http://localhost:4000"],
     credentials: true,
   })
 );

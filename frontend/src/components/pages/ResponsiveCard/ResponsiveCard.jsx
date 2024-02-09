@@ -15,16 +15,27 @@ export function ResponsiveCard({ isInsertMode, isReadMode, isUpdateMode }) {
     const fetchResponsiveData = async () => {
       try {
         const result = await getResponsive(fileID);
-        console.log("Resultado view: ", result);
         result.end_date = new Date(result.end_date)
           .toISOString()
           .substring(0, 10);
         result.start_date = new Date(result.start_date)
           .toISOString()
           .substring(0, 10);
-        setResponsiveData(result);
+        const resultFile = await getFile(fileID);
+        const receivedFile = new File([resultFile], "filename.pdf", {
+          type: "application/pdf",
+        });
+        const updatedObject = {
+          ...result,
+          servers: result.servers.map(server => ({
+            ...server,
+            windows_server: server.server_name
+          }))
+        };
+
+        setResponsiveData({ ...updatedObject, file: receivedFile });
+        setPreviewFile(receivedFile);
       } catch (error) {
-        // Handle errors
         console.error("Error fetching responsive data:", error);
       }
     };
@@ -33,7 +44,14 @@ export function ResponsiveCard({ isInsertMode, isReadMode, isUpdateMode }) {
       // Implement file fetching logic here
       try {
         const result = await getFile(fileID);
-        setPreviewFile(new Blob([result]));
+        const receivedFile = new File([result], "filename.pdf", {
+          type: "application/pdf",
+        }); // Adjust filename and type accordingly
+        setResponsiveData((prevData) => ({
+          ...prevData,
+          file: receivedFile,
+        }));
+        setPreviewFile(receivedFile);
       } catch (error) {
         console.error("Error fetching responsive data:", error);
       }
@@ -41,7 +59,7 @@ export function ResponsiveCard({ isInsertMode, isReadMode, isUpdateMode }) {
 
     if (isReadMode || isUpdateMode) {
       fetchResponsiveData();
-      fetchResponsiveFile();
+      //fetchResponsiveFile();
       // If you also need to fetch files, call fetchResponsiveFile() here
     }
   }, [fileID, isReadMode, isUpdateMode]);
@@ -58,7 +76,7 @@ export function ResponsiveCard({ isInsertMode, isReadMode, isUpdateMode }) {
               setPreviewFile={setPreviewFile}
             />
           )}
-          {(isReadMode || isUpdateMode) && responsiveData && (
+          {(isReadMode || isUpdateMode) && responsiveData && previewFile && (
             <ResponsiveFormContainer
               isInsertMode={isInsertMode}
               isReadMode={isReadMode}
