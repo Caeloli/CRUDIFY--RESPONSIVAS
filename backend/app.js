@@ -137,7 +137,12 @@ app.get("/verify-token", async (req, res) => {
 });
 
 app.use("/pmx-resp", routes);
-startBot();
-initializeScheduler();
+try{
+  startBot();
+  initializeScheduler();
+
+} catch(error){
+  console.log("BOT O SCHEDULER ERROR")
+}
 
 module.exports = app;
