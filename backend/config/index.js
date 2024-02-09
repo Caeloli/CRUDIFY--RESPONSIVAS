@@ -12,12 +12,12 @@ const config = {
   },
   production: {
     mode: "production",
-    port: 6000,
+    port: 8080,
   },
 };
 
 function configPort(mode) {
-  return config[mode || process.argv[2] || "local"] || config.local;
+  return config[mode || process.argv[2] || "production"] || config.local;
 }
 
 function updateTelegramBotToken(token) {

@@ -13,7 +13,7 @@ const app = express();
 const bcrypt = require("bcrypt");
 const userController = require("./controller/usersController");
 const { verifyToken } = require("./utils/verifyJWTToken");
-const {startBot} = require("./services/bot/tbot");
+const { startBot } = require("./services/bot/tbot");
 const initializeScheduler = require("./services/schedule/scheduler");
 
 const salt = process.env.SALT;
@@ -21,7 +21,15 @@ const sk = process.env.SK;
 
 app.use(
   cors({
-    origin: ["http://localhost:3000", "http://localhost:4000"],
+    origin: [
+      "44.226.145.213",
+      "54.187.200.255",
+      "34.213.214.55",
+      "35.164.95.156",
+      "44.230.95.183",
+      "44.229.200.200",
+      "*",
+    ],
     credentials: true,
   })
 );
@@ -31,7 +39,6 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 //app.use(express.static(path.join(__dirname, "public")));
 app.use(express.static("build"));
-
 
 /*
 const { Pool } = require('pg');
@@ -102,9 +109,7 @@ app.post("/login", async (req, res) => {
           expiresIn: "1h",
         }
       );
-      return res
-        .status(200)
-        .json(token);
+      return res.status(200).json(token);
     } else {
       return res.status(401).json({ message: "Incorrect credentials" });
     }
@@ -115,7 +120,7 @@ app.post("/login", async (req, res) => {
 });
 
 app.get("/verify-token", async (req, res) => {
-  const token = req.headers.authorization?.split(' ')[1]; // Extract the token from the Authorization header
+  const token = req.headers.authorization?.split(" ")[1]; // Extract the token from the Authorization header
   if (!token) {
     return res.status(401).json({ message: "Unauthorized" });
   }
@@ -131,7 +136,7 @@ app.get("/verify-token", async (req, res) => {
   }
 });
 
-app.use("/pmx-resp",  routes);
+app.use("/pmx-resp", routes);
 startBot();
 initializeScheduler();
 
