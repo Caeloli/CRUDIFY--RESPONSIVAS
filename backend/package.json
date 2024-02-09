@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "start": "cls && node ./bin/www",
+    "start": "node ./bin/www",
     "test": "jest --verbose",
     "devstart": "cls && nodemon ./bin/www"
   },
