@@ -1,7 +1,8 @@
 import axios from "axios";
 
-const apiBase = "http://localhost:4000";
-const apiURL = "http://localhost:4000/pmx-resp";
+const apiBase = "https://pmx-resp.onrender.com";
+
+const apiURL = `${apiBase}/pmx-resp`;
 const bearerToken = localStorage.getItem("jwt");
 
 /**

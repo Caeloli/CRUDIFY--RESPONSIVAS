@@ -22,7 +22,6 @@ const sk = process.env.SK;
 app.use(
   cors({
     origin: [
-      "http://localhost:3000",
       "44.226.145.213",
       "54.187.200.255",
       "34.213.214.55",
