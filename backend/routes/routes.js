@@ -393,13 +393,14 @@ router.delete("/responsive-file/:id", async (req, res) => {
     const id = req.params.id;
 
     // Actualizas estado de resposniva para eliminar
+    console.log("Actualización del estado");
     const responsiveFile = await responsiveFileController.updateResponsiveFile(
       id,
       {
         state_id_fk: 5,
       }
     );
-
+      console.log("REQUEST COMPLETEDES");
     //Genera instancia en auditlog
     await auditLogController.insertAuditLog({
       file_id_fk: responsiveFile.resp_id,

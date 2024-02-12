@@ -29,6 +29,7 @@ app.use(
       "44.230.95.183",
       "44.229.200.200",
       "https://pmx-resp.onrender.com",
+      "http://localhost:3000",
       "*",
     ],
     credentials: true,
@@ -60,6 +61,7 @@ const { Pool } = require('pg');
       next();
     });
 */
+/*
 (function () {
   const { Pool } = require("pg");
   const { dbConfigData } = require("./config/database/db");
@@ -78,7 +80,7 @@ const { Pool } = require('pg');
     next();
   });
 })();
-
+*/
 //app.use("/", indexRouter);
 /*app.use("/docker", async (request, result) => {
     try {

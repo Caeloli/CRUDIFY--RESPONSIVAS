@@ -5,9 +5,18 @@ const sequelize = new Sequelize(
   dbConfigData.database,
   dbConfigData.user,
   dbConfigData.password,
+  //"postgres://pmrresp_super:DQNOjK3ZIKpAMOeEgO9zYalIsqPeuAOx@dpg-cn5117tjm4es73br72jg-a.oregon-postgres.render.com/pmrresp",
   {
     host: dbConfigData.host,
     dialect: "postgres",
+    dialectOptions: {
+      ssl: {
+        require: true, // Set to true to require SSL
+        rejectUnauthorized: false, // Set to false if using self-signed certificates
+      },
+    },
+    logging: false,
+    native: false,
   }
 );
 
