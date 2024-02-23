@@ -1,6 +1,5 @@
-const db = require("../config/database/sequelize");
-
 const countResponsiveFilesStatus = async () => {
+  const db = require("../config/database/sequelize");
   try {
     const ResponsiveFiles = db.responsiveFiles;
     const results = await ResponsiveFiles.findAll();
@@ -12,6 +11,7 @@ const countResponsiveFilesStatus = async () => {
 };
 
 const insertResponsiveFile = async (responsiveData) => {
+  const db = require("../config/database/sequelize");
   try {
     const ResponsiveFiles = db.responsiveFiles;
     const results = await ResponsiveFiles.create(responsiveData);
@@ -23,6 +23,7 @@ const insertResponsiveFile = async (responsiveData) => {
 };
 
 const updateResponsiveFile = async (responsiveID, newResponsiveData) => {
+  const db = require("../config/database/sequelize");
   try {
     const ResponsiveFiles = db.responsiveFiles;
     const responsiveFile = await ResponsiveFiles.findByPk(responsiveID);
@@ -37,6 +38,7 @@ const updateResponsiveFile = async (responsiveID, newResponsiveData) => {
 };
 
 const deleteResponsiveFile = async (responsiveID) => {
+  const db = require("../config/database/sequelize");
   try {
     const ResponsiveFiles = db.responsiveFiles;
     const responsiveFile = await ResponsiveFiles.findByPk(responsiveID);
@@ -54,6 +56,7 @@ const deleteResponsiveFile = async (responsiveID) => {
 };
 
 const getAllResponsiveFiles = async () => {
+  const db = require("../config/database/sequelize");
   try {
     const ResponsiveFiles = db.responsiveFiles;
     const responsiveFiles = await ResponsiveFiles.findAll();
@@ -65,6 +68,7 @@ const getAllResponsiveFiles = async () => {
 };
 
 const getResponsiveFile = async (responsiveID) => {
+  const db = require("../config/database/sequelize");
   try {
     const ResponsiveFiles = db.responsiveFiles;
 

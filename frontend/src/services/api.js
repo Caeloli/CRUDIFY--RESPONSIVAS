@@ -1,7 +1,13 @@
 import axios from "axios";
 
-const apiBase = "https://pmx-resp.onrender.com";
-//const apiBase = "http://localhost:8080";
+let apiBase = "http://localhost";
+//let apiBase = "http://172.19.70.21:30203"; // Default API base URL
+
+// Set the API base URL to the Kubernetes service host if available
+const kubernetesServiceHost = process.env.KUBERNETES_SERVICE_HOST;
+if (kubernetesServiceHost) {
+  apiBase = `http://${kubernetesServiceHost}`;
+}
 const apiURL = `${apiBase}/pmx-resp`;
 const bearerToken = localStorage.getItem("jwt");
 
@@ -403,6 +409,27 @@ export const verifyToken = (token) => {
       } else {
         return { error: "Server Error" };
       }
+    });
+};
+
+/**
+ * Register
+ */
+
+const registerURI = "/register";
+
+export const postRequestRegister = (registerData) => {
+  return axios
+    .post(`${apiURL}${apiAuthRequestURI}${registerURI}`, registerData)
+    .then((response) => {
+      if (response.status === 200) {
+        return response.data;
+      } else {
+        return { error: "Server Error" };
+      }
+    })
+    .catch((error) => {
+      return { error: "Server Error" };
     });
 };
 

@@ -9,7 +9,9 @@ import { Link } from "react-router-dom";
 import { FaFileAlt, FaMobileAlt, FaUser, FaHome } from "react-icons/fa";
 import { IoSettingsSharp, IoExitOutline } from "react-icons/io5";
 import "./Navbar.scss";
-export function NavbarView({handleLogOut}) {
+import { decodeToken } from "../../../func/func";
+export function NavbarView({ handleLogOut }) {
+  const usr = decodeToken();
   return (
     <>
       <Navbar
@@ -61,24 +63,28 @@ export function NavbarView({handleLogOut}) {
                     <Link to={"/FilesForm"}>Crear</Link>
                   </NavItem>
                 </NavDropdown>
-                <NavItem>
-                  <Link
-                    to={"/Notifications"}
-                    className="d-flex gap-1 align-items-center"
-                  >
-                    <FaMobileAlt />
-                    <p className="m-0">Notificaciones</p>
-                  </Link>
-                </NavItem>
-                <NavItem>
-                  <Link
-                    to={"/Users"}
-                    className="d-flex gap-1 align-items-center"
-                  >
-                    <FaUser />
-                    <p className="m-0">Usuarios</p>
-                  </Link>
-                </NavItem>
+                {usr.user_type === 2 && (
+                  <NavItem>
+                    <Link
+                      to={"/Notifications"}
+                      className="d-flex gap-1 align-items-center"
+                    >
+                      <FaMobileAlt />
+                      <p className="m-0">Notificaciones</p>
+                    </Link>
+                  </NavItem>
+                )}
+                {usr.user_type === 2 && (
+                  <NavItem>
+                    <Link
+                      to={"/Users"}
+                      className="d-flex gap-1 align-items-center"
+                    >
+                      <FaUser />
+                      <p className="m-0">Usuarios</p>
+                    </Link>
+                  </NavItem>
+                )}
                 {/*<NavItem>
                   <Link
                     to={"/Settings"}
@@ -92,10 +98,10 @@ export function NavbarView({handleLogOut}) {
               </Nav>
               <Nav>
                 <NavItem>
-                  <Link 
-                  className="d-flex gap-1 align-items-center" 
-                  onClick={handleLogOut}
-                  to={"/Login"}
+                  <Link
+                    className="d-flex gap-1 align-items-center"
+                    onClick={handleLogOut}
+                    to={"/Login"}
                   >
                     <IoExitOutline />
                     <p className="m-0">Cerrar Sesión</p>

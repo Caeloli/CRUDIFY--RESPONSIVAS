@@ -12,7 +12,7 @@ const config = {
   },
   production: {
     mode: "production",
-    port: 8080,
+    port: 80,
   },
 };
 

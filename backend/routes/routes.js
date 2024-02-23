@@ -14,7 +14,6 @@ const authAllowController = require("../controller/authorizationAllowController"
 const authReqController = require("../controller/authorizationRequestController");
 const emailNotifyController = require("../controller/emailsNotifyController");
 const auditLogController = require("../controller/auditLogController");
-
 const authServices = require("../services/authServices");
 const utils = require("../utils/functions");
 const {
@@ -27,6 +26,7 @@ const initializeScheduler = require("../services/schedule/scheduler");
 const {
   postgreSQLUpdateResponsiveNotficationsState,
 } = require("../services/dbServices");
+const globals = require("../config/globalVariables");
 
 //const responsiveFileModel = require("../model/responsivefile.model")
 const salt = process.env.SALT;
@@ -50,13 +50,19 @@ const memoryStorage = multer.memoryStorage();
 
 const upload = multer({ storage: memoryStorage });
 
-router.get("/", (req, res) => {
-  res.send("HelloWold");
-});
-
 /**
  * UserTypes
  */
+
+router.get("/active", async (req, res) => {
+  try {
+    return res
+      .status(200)
+      .json({ message: `Active ${process.env.KUBERNETES_SERVICE_HOST}` });
+  } catch (error) {
+    return res.status(500).json({ message: "Internal server error" });
+  }
+});
 
 router.get("/usertype", async (req, res) => {
   try {
@@ -109,7 +115,6 @@ router.delete("/users/:id", async (req, res) => {
   try {
     const id = req.params.id;
     const user = await userController.getUser(id);
-    console.log("USRR: ", user);
     if (user.user_type_id_fk === 1) {
       const userDeleted = await userController.deleteUser(id);
       return res.status(200).json({
@@ -221,7 +226,7 @@ router.post("/responsive-file", upload.single("file"), async (req, res) => {
       await responsiveFileController.insertResponsiveFile({
         ...fileDataWithoutRespId,
         file_route: path.join(filePath, uniqueName),
-        user_id_fk: 1,
+        user_id_fk: globals.adminUser.user_id,
       });
 
     const { servers } = JSON.parse(data);
@@ -297,7 +302,7 @@ router.put("/responsive-file/:id", upload.single("file"), async (req, res) => {
         await responsiveFileController.updateResponsiveFile(id, {
           ...data,
           file_route: path.join(filePath, uniqueName),
-          user_id_fk: 1,
+          user_id_fk: globals.adminUser.user_id,
         });
 
       // Delete the old file
@@ -321,8 +326,8 @@ router.put("/responsive-file/:id", upload.single("file"), async (req, res) => {
           serverController.deleteServer(server.server_id);
         });
       //Create new servers
-      if (data.servers){
-        console.log("Insertar servidores: ", data.servers )
+      if (data.servers) {
+        console.log("Insertar servidores: ", data.servers);
         data.servers.forEach((server) => {
           serverController.insertServer({
             server_name: server.windows_server,
@@ -335,7 +340,7 @@ router.put("/responsive-file/:id", upload.single("file"), async (req, res) => {
       const responsiveFileStored =
         await responsiveFileController.updateResponsiveFile(id, {
           ...data,
-          user_id_fk: 1,
+          user_id_fk: globals.adminUser.user_id,
         });
       return res.status(200).json({
         message: `Responsive File updated successfully with ID: ${responsiveFileStored.resp_id}`,
@@ -400,11 +405,11 @@ router.delete("/responsive-file/:id", async (req, res) => {
         state_id_fk: 5,
       }
     );
-      console.log("REQUEST COMPLETEDES");
+    console.log("REQUEST COMPLETEDES");
     //Genera instancia en auditlog
     await auditLogController.insertAuditLog({
       file_id_fk: responsiveFile.resp_id,
-      user_id_fk: 1, //modify_user_id
+      user_id_fk: globals.adminUser.user_id, //modify_user_id
       action_id_fk: 3,
       date: new Date().getTime(),
     });
@@ -533,6 +538,32 @@ router.delete("/authrequest/:id", async (req, res) => {
 });
 
 /**
+ * Register
+ */
+
+router.post("/authrequest/register", async (req, res) => {
+  try {
+    const { user, userType } = req.body;
+    console.log("LA DATA EN AUTHREQUEST, REGISTER: ", user, userType);
+    const authRequest = await authReqController.insertAuthRequest({
+      user_id_fk: globals.adminUser.user_id,
+      action_id_fk: 1,
+      request_date: new Date().getTime(),
+      affected_email: user,
+      affected_type: userType,
+    });
+    return res.status(200).json({
+      message: `Post authRequest successfully with ID: ${authRequest.request_id}`,
+    });
+  } catch (error) {
+    console.log("Error", error);
+    return res
+      .status(500)
+      .json({ message: "Internal server error with authRequest register" });
+  }
+});
+
+/**
  * Email Notify
  */
 
@@ -547,7 +578,7 @@ router.post("/email-notify", async (req, res) => {
     console.log("Error", error);
     return res
       .status(500)
-      .json({ message: "Internal server error with authRequest" });
+      .json({ message: "Internal server error with email-notify" });
   }
 });
 

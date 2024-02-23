@@ -1,6 +1,7 @@
 const db = require("../config/database/sequelize");
 
 const insertAuditLog = async (auditLogData) => {
+  const db = require("../config/database/sequelize");
   try {
     const AuditLog = db.auditLog;
     const results = await AuditLog.create(auditLogData);
@@ -12,6 +13,7 @@ const insertAuditLog = async (auditLogData) => {
 };
 
 const updateAuditLog = async (userId, newUserData) => {
+  const db = require("../config/database/sequelize");
   try {
     const AuditLog = db.auditLog;
     const auditlog = await AuditLog.findByPk(userId);
@@ -26,6 +28,7 @@ const updateAuditLog = async (userId, newUserData) => {
 };
 
 const deleteAuditLog = async (userId) => {
+  const db = require("../config/database/sequelize");
   try {
     const AuditLog = db.auditLog;
     const auditlog = await AuditLog.findByPk(userId);
@@ -43,6 +46,7 @@ const deleteAuditLog = async (userId) => {
 };
 
 const getAllAuditLogs = async () => {
+  const db = require("../config/database/sequelize");
   try {
     const AuditLog = db.auditLog;
     const auditlogs = await AuditLog.findAll();
@@ -54,7 +58,8 @@ const getAllAuditLogs = async () => {
 };
 
 const getAuditLog = async (auditLogId) => {
-  try{
+  const db = require("../config/database/sequelize");
+  try {
     const AuditLog = db.auditLog;
     const auditLog = await AuditLog.findByPk(auditLogId);
     if (auditLog) {

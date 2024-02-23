@@ -15,26 +15,35 @@ const userController = require("./controller/usersController");
 const { verifyToken } = require("./utils/verifyJWTToken");
 const { startBot } = require("./services/bot/tbot");
 const initializeScheduler = require("./services/schedule/scheduler");
+const { postgreSQLInitValuesDB } = require("./services/dbServices");
 
 const salt = process.env.SALT;
 const sk = process.env.SK;
 
-app.use(
-  cors({
-    origin: [
-      "44.226.145.213",
-      "54.187.200.255",
-      "34.213.214.55",
-      "35.164.95.156",
-      "44.230.95.183",
-      "44.229.200.200",
-      "https://pmx-resp.onrender.com",
-      "http://localhost:3000",
-      "*",
-    ],
-    credentials: true,
-  })
-);
+app.use(cors({
+  origin: function(origin, callback) {
+    // Verifica si el origen de la solicitud está permitido
+    if (!origin) return callback(null, true);
+    
+    // Verifica si el origen está en la lista blanca permitida
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+
+    // Devuelve un error si el origen no está permitido
+    return callback(new Error('Not allowed by CORS'));
+  },
+  credentials: true
+}));
+
+// Lista blanca de orígenes permitidos
+let allowedOrigins = ["http://localhost:3000"]; // Origen predeterminado
+
+// Agrega la dirección IP del servicio de Kubernetes a la lista blanca de allowedOrigins
+const kubernetesServiceHost = process.env.KUBERNETES_SERVICE_HOST;
+if (kubernetesServiceHost) {
+  allowedOrigins.push(`http://${kubernetesServiceHost}`);
+}
 app.use(logger("dev"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
@@ -96,17 +105,20 @@ const { Pool } = require('pg');
   */
 app.post("/login", async (req, res) => {
   const { user, password } = req.body;
+  console.log("Recibiendo user y password: ", user, password);
   try {
     //const hashedPassword = await bcrypt.hash(password, salt);
     const userStored = await userController.getUserByEmail(user);
+    console.log("El userStored: ", userStored);
     if (!userStored) {
       return res.status(404).json({ message: "User not found" });
     }
 
     const passwordMatch = await bcrypt.compare(password, userStored.pswrd);
+    console.log("PM", passwordMatch);
     if (passwordMatch) {
       const token = jwt.sign(
-        { user_id: userStored.user_id, email: userStored.email },
+        { user_id: userStored.user_id, email: userStored.email, user_type:userStored.user_type_id_fk },
         sk,
         {
           expiresIn: "1h",
@@ -138,14 +150,13 @@ app.get("/verify-token", async (req, res) => {
     return res.status(401).json({ message: "Unauthorized" });
   }
 });
-
+  
 app.use("/pmx-resp", routes);
 try{
-  startBot();
-  initializeScheduler();
-
+  //startBot();
+  //initializeScheduler();
 } catch(error){
-  console.log("BOT O SCHEDULER ERROR")
+  console.log("BOT O SCHEDULER ERROR", error)
 }
 
 module.exports = app;

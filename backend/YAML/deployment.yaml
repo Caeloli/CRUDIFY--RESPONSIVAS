@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pmrresp-deployment
+  labels:
+    app: pmrresp-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: pmrresp
+      component: pmrresp-app # Corrected label
+  template:
+    metadata:
+      labels:
+        app: pmrresp
+        component: pmrresp-app # Corrected label
+    spec:
+      containers:
+      - name: pmrresp-app
+        image: harbor01.un.pemex.com/spar-qa/pmrresp:latest
+        imagePullPolicy: Always # Changed imagePullPolicy
+        ports:
+        - containerPort: 80
+          name: http
+        env:
+        - name: KUBERNETES_SERVICE_HOST
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP
+        command: ["npm", "start", "production"]
+

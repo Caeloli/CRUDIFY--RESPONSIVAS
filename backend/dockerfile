@@ -2,12 +2,24 @@ FROM node:20.10.0-alpine3.18
 
 WORKDIR /usr/src/app
 
+# Set environment variables
+ENV SALT=$2a$12$7gGg3Xbv42VJLY0.IffA6uQC0o3v2katRqxjbxDIe4jANxV798icS\
+    SK=fjvQyiWmpwfEQRKKPsAo9AgxExvGFTfL7cAjZ3EV6qcuPCM4WffjCJvoWWoX+1fm \
+    TELEGRAM_CHAT_GROUP_ID=-1001612435955 \
+    TELEGRAM_BOT_TOKEN=6668462504:AAH31jG4kyxX3FHMx1TcnpEkKeZstsBoO50 \
+    NOTIFICATION_TIME=01:12
+
+# Copy package.json and package-lock.json (if available)
 COPY package*.json ./
 
+# Install dependencies
 RUN npm install
 
+# Copy the rest of the application code
 COPY . .
 
-EXPOSE 6000 5000 4000
+# Expose ports
+EXPOSE 6000 5000 4000 80
 
-CMD ["npm", "start", "staging"]
+# Start the application
+CMD ["npm", "start", "production"]

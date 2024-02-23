@@ -9,7 +9,7 @@ const {
   postgreSQLUpdateResponsiveNotficationsState,
 } = require("../dbServices");
 const { checkExpirationDates } = require("../fileServices");
-const url_name = "http://localhost:4000/pmx-resp/files/";
+const url_name = "http://172.19.70.21:30203/pmx-resp/files/";
 
 async function job() {
   try {
@@ -66,7 +66,6 @@ async function updateResponsiveStatusJob() {
 async function deleteAuditLogFiles() {
   const auditLogs = await auditLogController.getAllAuditLogs();
   auditLogs.forEach((auditLog) => {
-    console.log("Se elimina respfile: ", auditLog.file_id_fk);
     responsiveFileController.deleteResponsiveFile(auditLog.file_id_fk);
   });
 }

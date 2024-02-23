@@ -1,5 +1,8 @@
 const { Sequelize } = require("sequelize");
 const { dbConfigData } = require("./db");
+const { postgreSQLInitValuesDB } = require("../../services/dbServices");
+const { startBot } = require("../../services/bot/tbot");
+const initializeScheduler = require("../../services/schedule/scheduler");
 
 const sequelize = new Sequelize(
   dbConfigData.database,
@@ -9,14 +12,17 @@ const sequelize = new Sequelize(
   {
     host: dbConfigData.host,
     dialect: "postgres",
+    /*
     dialectOptions: {
       ssl: {
         require: true, // Set to true to require SSL
         rejectUnauthorized: false, // Set to false if using self-signed certificates
       },
-    },
-    logging: false,
+      */
+
+    /*logging: false,
     native: false,
+    */
   }
 );
 
@@ -41,6 +47,7 @@ const db = {};
   db.files = await require("../../model/fileModel")(sequelize);
   db.servers = await require("../../model/serversModel")(sequelize);
   db.emailsNotify = await require("../../model/emailsNotifyModel")(sequelize);
+  await postgreSQLInitValuesDB();
 })();
 
 module.exports = db;

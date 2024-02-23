@@ -3,7 +3,7 @@ import React from "react";
 import { Button, Col, Container, Form, Image, Row } from "react-bootstrap";
 import * as yup from "yup";
 import { postLogin, verifyToken } from "../../../services/api";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 export function Login() {
   const navigate = useNavigate();
 
@@ -98,6 +98,11 @@ export function Login() {
                       {errors.password}
                     </Form.Control.Feedback>
                   </Form.Group>
+                </Row>
+                <Row>
+                  <Link to={"/Register"}>
+                    <p style={{textDecoration: "underline"}}>¿No tiene una cuenta? Regístrate</p>
+                  </Link>
                 </Row>
                 <Row>
                   <Form.Group>

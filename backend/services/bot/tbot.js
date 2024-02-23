@@ -1,6 +1,7 @@
 const { Telegraf, Scenes } = require("telegraf");
 const { session } = require("telegraf");
 const authReqController = require("../../controller/authorizationRequestController");
+const { adminUser } = require("../../config/globalVariables");
 require("dotenv").config();
 
 const EMAIL_INPUT = 0;
@@ -95,7 +96,7 @@ const emailDataWizard = new Scenes.WizardScene(
     }
 
     const authRequest = await authReqController.insertAuthRequest({
-      user_id_fk: 552,
+      user_id_fk: globals.adminUser.user_id,
       action_id_fk: 1,
       request_date: new Date().getTime(),
       affected_email: email,

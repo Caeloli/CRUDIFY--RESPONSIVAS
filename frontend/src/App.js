@@ -12,6 +12,7 @@ import { UsersDash } from "./components/pages/UsersDash/UsersDash";
 import { UsersContainer } from "./components/pages/UsersDash/Users/UsersContainer";
 import { AuthorizationContainer } from "./components/pages/UsersDash/Authorization/AuthorizationContainer";
 import { Login } from "./components/pages/Login/Login";
+import { Register } from "./components/pages/Register/Register";
 import { ProtectedRouteContainer } from "./components/common/ProtectedRoute/ProtectedRouteContainer";
 function App() {
   return (
@@ -40,6 +41,7 @@ function App() {
           <Route path="/Settings" element={<Settings />} />
         </Route>
         <Route path="/Login" element={<Login />} />
+        <Route path="/Register" element={<Register />} />
       </Routes>
     </BrowserRouter>
   );

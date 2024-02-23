@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pmrresp-app-deployment
+  labels:
+    app: pmrresp-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: pmrresp-app
+  template:
+    metadata:
+      labels:
+        app: pmrresp-app
+    spec:
+      containers:
+      - name: pmrresp-app
+        image: harbor01.un.pemex.com/spar-qa/pmmresp:latest
+        ports:
+        - containerPort: 8080
+          name: http
+        - containerPort: 6000
+          name: port2
+        - containerPort: 5000
+          name: port3
+        - containerPort: 4000
+          name: port4
+        env:
+        - name: SALT
+          value: "$2a$12$7gGg3Xbv42VJLY0.IffA6uQC0o3v2katRqxjbxDIe4jANxV798icS"
+        - name: SK
+          value: "fjvQyiWmpwfEQRKKPsAo9AgxExvGFTfL7cAjZ3EV6qcuPCM4WffjCJvoWWoX+1fm"
+        - name: TELEGRAM_CHAT_GROUP_ID
+          value: "-1001612435955"
+        - name: TELEGRAM_BOT_TOKEN
+          value: "6668462504:AAH31jG4kyxX3FHMx1TcnpEkKeZstsBoO50"
+        - name: NOTIFICATION_TIME
+          value: "12:00"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pmrresp-app-service
+spec:
+  selector:
+    app: pmrresp-app
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 8080
+  type: LoadBalancer
