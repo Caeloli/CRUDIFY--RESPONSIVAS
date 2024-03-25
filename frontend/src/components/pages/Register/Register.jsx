@@ -41,14 +41,14 @@ export function Register() {
   };
 
   const RegisterSchema = yup.object().shape({
-    user: yup
+    email: yup
       .string()
       .email("Usuario debe ser un email válido")
       .required("Usuario es un campo obligatorio"),
   });
 
   const initialValues = {
-    user: "",
+    email: "",
   };
 
   return (
@@ -95,21 +95,21 @@ export function Register() {
                     <Form.Group
                       as={Col}
                       md="12"
-                      controlId="validationFormikUser"
+                      controlId="validationFormikemail"
                     >
                       <Form.Label>Correo Electrónico</Form.Label>
                       <Form.Control
                         type="text"
                         placeholder="Correo Electrónico"
-                        name="user"
-                        value={values.user}
+                        name="email"
+                        value={values.email}
                         onChange={handleChange}
                         disabled={isSubmit}
-                        isInvalid={touched.user && !!errors.user}
+                        isInvalid={touched.email && !!errors.email}
                       />
 
                       <Form.Control.Feedback type="invalid">
-                        {errors.user}
+                        {errors.email}
                       </Form.Control.Feedback>
                     </Form.Group>
                   </Row>

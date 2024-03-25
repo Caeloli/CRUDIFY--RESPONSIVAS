@@ -7,9 +7,11 @@ import { FailModalContainer } from "../../../common/Modals/FailModal/FailModalCo
 import { SuccessModalContainer } from "../../../common/Modals/SuccessModal/SuccessModalContainer";
 import { ServerFormContainer } from "./ServerForm/ServerFormContainer";
 import { RxCross1 } from "react-icons/rx";
-export function ResponsiveFormView({
+import Select from "react-select";
+export function ResponsiveFourthFormView({
   schema,
   initialValues,
+  usersServersValues,
   handleSubmit,
   handleFileChange,
   handleAutoResponsive,
@@ -69,6 +71,8 @@ export function ResponsiveFormView({
 
     setServers((prevServers) => [...prevServers, newServer]);
   };*/
+
+  console.log("Users Data: ", usersServersValues);
 
   return (
     <>
@@ -143,7 +147,19 @@ export function ResponsiveFormView({
             <Row className="mb-3">
               <Form.Group as={Col} md="4" controlId="validationFormikUserName">
                 <Form.Label>User Name</Form.Label>
-                <Form.Control
+                <Select 
+                placeholder="User Name"
+                name="user_name"
+                value={{ label: values.user_name, value: values.user_name }}
+                onChange={(option) => setFieldValue('user_name', option.value)}
+                options={usersServersValues}
+                isDisabled={isSubmit || isReadMode} // Disable while submitting
+                isClearable
+                isSearchable
+                //onBlur={handleBlur('user_name')}
+                classNamePrefix="select"
+                />
+                {/*<Form.Control
                   type="text"
                   placeholder="User Name"
                   name="user_name"
@@ -152,7 +168,7 @@ export function ResponsiveFormView({
                   onChange={handleChange}
                   isInvalid={touched.user_name && !!errors.user_name}
                 />
-
+              */}
                 <Form.Control.Feedback type="invalid">
                   {errors.user_name}
                 </Form.Control.Feedback>

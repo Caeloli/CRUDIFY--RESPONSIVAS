@@ -131,7 +131,7 @@ export function AuthorizationContainer() {
 
   return (
     authData && (
-      <FSPTableContainer data={authData} columns={columns} fixedColumns={[]} />
+      <FSPTableContainer data={authData} columns={columns} fixedColumns={[]} tableStyles={{minHeight: "auto"}} />
     )
   );
 }

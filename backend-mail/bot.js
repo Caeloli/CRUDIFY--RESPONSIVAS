@@ -1,9 +1,10 @@
 const { Telegraf, Scenes } = require("telegraf");
 const { session } = require("telegraf");
-const authReqController = require("../../controller/authorizationRequestController");
-const { adminUser } = require("../../config/globalVariables");
+const { default: axios } = require("axios");
 require("dotenv").config();
 
+const backendPostgresql = "http://localhost";
+const backendDir = "/pmx-resp";
 const EMAIL_INPUT = 0;
 let bot;
 /*const emailDataWizard = new Scenes.WizardScene(
@@ -94,15 +95,26 @@ const emailDataWizard = new Scenes.WizardScene(
       );
       return ctx.scene.leave();
     }
-
-    const authRequest = await authReqController.insertAuthRequest({
-      user_id_fk: globals.adminUser.user_id,
-      action_id_fk: 1,
-      request_date: new Date().getTime(),
-      affected_email: email,
-      affected_type: type_of_user,
-      chat_id: chat_id,
+    const loginResponse = await axios.post(`${backendPostgresql}/login`, {
+      user: "admin@admin.com",
+      password: "s0port3+Adm1n",
     });
+    const token = loginResponse.data;
+    const authRequest = await axios.post(
+      `${backendPostgresql}${backendDir}/authrequest`,
+      {
+        affected_email: email,
+        affected_type: type_of_user,
+        chat_id: chat_id,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    console.log("AuthRequest: ", authRequest.status, authRequest.data);
 
     await ctx.reply(
       `Gracias, tu correo electrónico: ${email} fue registrado exitósamente. Esperando confirmación del administrador`
@@ -112,17 +124,17 @@ const emailDataWizard = new Scenes.WizardScene(
 );
 
 async function sendNotification(
-  message,
+  text,
   chat_id = process.env.TELEGRAM_CHAT_GROUP_ID,
-  type = 'text'
+  type = "text"
 ) {
   try {
-    if(type == 'text')
-    await bot.telegram.sendMessage(chat_id, message, {
-      parse_mode: "HTML",
-    });
-    else if(type == 'document'){
-      await bot.telegram.sendDocument(chat_id, message);
+    if (type == "text")
+      await bot.telegram.sendMessage(chat_id, text, {
+        parse_mode: "HTML",
+      });
+    else if (type == "document") {
+      await bot.telegram.sendDocument(chat_id, text);
     }
   } catch (error) {
     throw new Error("Error sending message to Telegram:", error);
@@ -135,7 +147,6 @@ async function start(ctx) {
 }
 
 async function send_to_groups(ctx) {
-  
   const chat_id = -1001612435955;
   console.log("Enviando a chat_id ", chat_id);
   await ctx.telegram.sendMessage(chat_id, "Hello. I'm just messaging to test");
@@ -146,18 +157,24 @@ async function cancel(ctx) {
   return ctx.scene.leave();
 }
 
-function startBot() {
+async function startBot() {
   const stage = new Scenes.Stage([emailDataWizard]);
   const TOKEN = process.env.TELEGRAM_BOT_TOKEN;
-  bot = new Telegraf(TOKEN);
-  bot.use(session());
-  bot.use(stage.middleware());
-  bot.command("start", start);
-  bot.command("send", send_to_groups);
-  bot.command("register", (ctx) =>
-    ctx.scene.enter("EMAIL_DATA_WIZARD_SCENE_ID")
-  );
-  bot.launch();
+  try {
+    bot = new Telegraf(TOKEN);
+    bot.use(session());
+    bot.use(stage.middleware());
+    bot.command("start", start);
+    bot.command("send", send_to_groups);
+    bot.command("register", (ctx) =>
+      ctx.scene.enter("EMAIL_DATA_WIZARD_SCENE_ID")
+    );
+    bot.launch();
+  } catch (error) {
+    console.error("Error launching the bot:", error);
+    // Handle the error and attempt to restart the bot
+    setTimeout(startBot, 5000); // Restart the bot after 5 seconds
+  }
 }
 
 module.exports = {

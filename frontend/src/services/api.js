@@ -20,6 +20,7 @@ export const postResponsive = (responsiveData) => {
   return axios
     .post(`${apiURL}${apiResponsiveURI}`, responsiveData, {
       headers: {
+        Authorization: `Bearer ${bearerToken}`,
         "content-type": "multipart/form-data",
       },
     })
@@ -40,6 +41,7 @@ export const putResponsive = (responsiveID, newResponsiveData) => {
   return axios
     .put(`${apiURL}${apiResponsiveURI}/${responsiveID}`, newResponsiveData, {
       headers: {
+        Authorization: `Bearer ${bearerToken}`,
         "content-type": "multipart/form-data",
       },
     })
@@ -52,13 +54,17 @@ export const putResponsive = (responsiveID, newResponsiveData) => {
     })
     .catch((error) => {
       console.log("Error");
-      return error;
+      return { error: "Request error" };
     });
 };
 
 export const getResponsive = (responsiveID) => {
   return axios
-    .get(`${apiURL}${apiResponsiveURI}/${responsiveID}`)
+    .get(`${apiURL}${apiResponsiveURI}/${responsiveID}`, {
+      headers: {
+        Authorization: `Bearer ${bearerToken}`,
+      },
+    })
     .then((response) => {
       if (response.status === 200) {
         return response.data; // Only return data for successful responses
@@ -74,7 +80,11 @@ export const getResponsive = (responsiveID) => {
 
 export const getAllResponsive = () => {
   return axios
-    .get(`${apiURL}${apiResponsiveURI}`)
+    .get(`${apiURL}${apiResponsiveURI}`, {
+      headers: {
+        Authorization: `Bearer ${bearerToken}`,
+      },
+    })
     .then((response) => {
       if (response.status === 200) {
         return response.data; // Only return data for successful responses
@@ -90,7 +100,11 @@ export const getAllResponsive = () => {
 
 export const deleteResponsive = (responsiveID) => {
   return axios
-    .delete(`${apiURL}${apiResponsiveURI}/${responsiveID}`)
+    .delete(`${apiURL}${apiResponsiveURI}/${responsiveID}`, {
+      headers: {
+        Authorization: `Bearer ${bearerToken}`,
+      },
+    })
     .then((response) => {
       if (response.status === 200) {
         return response.data;
@@ -113,6 +127,7 @@ export const postUser = (responsiveData) => {
   return axios
     .post(`${apiURL}${apiUsersURI}`, responsiveData, {
       headers: {
+        Authorization: `Bearer ${bearerToken}`,
         "content-type": "multipart/form-data",
       },
     })
@@ -133,6 +148,7 @@ export const putUser = (responsiveID, newResponsiveData) => {
   return axios
     .put(`${apiURL}${apiUsersURI}/${responsiveID}`, newResponsiveData, {
       headers: {
+        Authorization: `Bearer ${bearerToken}`,
         "content-type": "multipart/form-data",
       },
     })
@@ -151,7 +167,11 @@ export const putUser = (responsiveID, newResponsiveData) => {
 
 export const getUser = (responsiveID) => {
   return axios
-    .get(`${apiURL}${apiUsersURI}/${responsiveID}`)
+    .get(`${apiURL}${apiUsersURI}/${responsiveID}`, {
+      headers: {
+        Authorization: `Bearer ${bearerToken}`,
+      },
+    })
     .then((response) => {
       if (response.status === 200) {
         return response.data; // Only return data for successful responses
@@ -167,7 +187,11 @@ export const getUser = (responsiveID) => {
 
 export const getAllUsers = () => {
   return axios
-    .get(`${apiURL}${apiUsersURI}`)
+    .get(`${apiURL}${apiUsersURI}`, {
+      headers: {
+        Authorization: `Bearer ${bearerToken}`,
+      },
+    })
     .then((response) => {
       if (response.status === 200) {
         return response.data; // Only return data for successful responses
@@ -183,7 +207,11 @@ export const getAllUsers = () => {
 
 export const deleteUser = (responsiveID) => {
   return axios
-    .delete(`${apiURL}${apiUsersURI}/${responsiveID}`)
+    .delete(`${apiURL}${apiUsersURI}/${responsiveID}`, {
+      headers: {
+        Authorization: `Bearer ${bearerToken}`,
+      },
+    })
     .then((response) => {
       if (response.status === 200) {
         return response.data;
@@ -216,6 +244,9 @@ export const getFile = (fileID) => {
   return axios
     .get(`${apiURL}${apiFileURI}/${fileID}`, {
       responseType: "blob",
+      headers: {
+        Authorization: `Bearer ${bearerToken}`,
+      },
     })
     .then((response) => {
       if (response.status === 200) {
@@ -234,6 +265,7 @@ export const getFileData = (fileData) => {
   return axios
     .post(`${apiURL}${apiFileURI}/data`, fileData, {
       headers: {
+        Authorization: `Bearer ${bearerToken}`,
         "content-type": "multipart/form-data",
       },
     })
@@ -277,7 +309,11 @@ export const getAllAuthAllowByUser = () => {
 
 export const updateAuthAllow = (authAllowId, authAllowData) => {
   return axios
-    .put(`${apiURL}${apiAuthAllowURI}/${authAllowId}`, authAllowData)
+    .put(`${apiURL}${apiAuthAllowURI}/${authAllowId}`, authAllowData, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("jwt")}`,
+      },
+    })
     .then((response) => {
       if (response.status === 200) {
         return response.data;
@@ -298,7 +334,11 @@ export const updateAuthAllow = (authAllowId, authAllowData) => {
 const apiAuthRequestURI = "/authrequest";
 export const getAllAuthRequestData = () => {
   return axios
-    .get(`${apiURL}${apiAuthRequestURI}`)
+    .get(`${apiURL}${apiAuthRequestURI}`, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("jwt")}`,
+      },
+    })
     .then((response) => {
       if (response.status === 200) {
         return response.data; // Only return data for successful responses
@@ -314,7 +354,11 @@ export const getAllAuthRequestData = () => {
 
 export const deleteAuthRequest = (id) => {
   return axios
-    .delete(`${apiURL}${apiAuthRequestURI}/${id}`)
+    .delete(`${apiURL}${apiAuthRequestURI}/${id}`, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("jwt")}`,
+      },
+    })
     .then((response) => {
       if (response.status === 200) {
         return response.data; // Only return data for successful responses
@@ -329,13 +373,62 @@ export const deleteAuthRequest = (id) => {
 };
 
 /**
+ * Users Servers
+ */
+
+const apiUsersServersURI = "/user-servers";
+
+export const getAllUsersServers = () => {
+  return axios
+    .get(`${apiURL}${apiUsersServersURI}`, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("jwt")}`,
+      },
+    })
+    .then((response) => {
+      if (response.status === 200) {
+        return response.data;
+      } else {
+        return { error: "Server Error" };
+      }
+    });
+};
+/**
+ * Servers
+ */
+
+const apiServersURI = "/servers";
+export const getAllServers = () => {
+  return axios
+    .get(`${apiURL}${apiServersURI}`, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("jwt")}`,
+      },
+    })
+    .then((response) => {
+      if (response.status === 200) {
+        return response.data;
+      } else {
+        return { error: "Server Error" };
+      }
+    });
+};
+/**
  * Email Notify
  */
 
 const apiEmailNotifyURI = "/email-notify";
 export const postEmailNotify = (emailNotifyData) => {
   return axios
-    .post(`${apiURL}${apiEmailNotifyURI}`, { data: emailNotifyData })
+    .post(
+      `${apiURL}${apiEmailNotifyURI}`,
+      { data: emailNotifyData },
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("jwt")}`,
+        },
+      }
+    )
     .then((response) => {
       if (response.status === 200) {
         return response.data;
@@ -420,7 +513,7 @@ const registerURI = "/register";
 
 export const postRequestRegister = (registerData) => {
   return axios
-    .post(`${apiURL}${apiAuthRequestURI}${registerURI}`, registerData)
+    .post(`${apiBase}${registerURI}`, registerData)
     .then((response) => {
       if (response.status === 200) {
         return response.data;
@@ -505,18 +598,32 @@ export const getNotificationBot = () => {
 const apiAuditLogURI = "/auditlog";
 const fileRestoreURI = "/file-restore";
 export const getAllAuditLogs = () => {
-  return axios.get(`${apiURL}${apiAuditLogURI}`).then((response) => {
-    if (response.status === 200) {
-      return response.data;
-    } else {
-      return { error: "Server Error" };
-    }
-  });
+  return axios
+    .get(`${apiURL}${apiAuditLogURI}`, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("jwt")}`,
+      },
+    })
+    .then((response) => {
+      if (response.status === 200) {
+        return response.data;
+      } else {
+        return { error: "Server Error" };
+      }
+    });
 };
 
 export const postRestoreFileAuthReq = (id) => {
   return axios
-    .post(`${apiURL}${apiAuditLogURI}${fileRestoreURI}/${id}`)
+    .post(
+      `${apiURL}${apiAuditLogURI}${fileRestoreURI}/${id}`,
+      {},
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("jwt")}`,
+        },
+      }
+    )
     .then((response) => {
       if (response.status === 200) {
         return response.data;

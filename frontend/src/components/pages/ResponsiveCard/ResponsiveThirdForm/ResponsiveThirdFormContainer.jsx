@@ -1,16 +1,25 @@
 import React, { useEffect, useState } from "react";
-import { ResponsiveFormView } from "./ResponsiveFormView";
+import { ResponsiveThirdFormView } from "./ResponsiveThirdFormView";
 import * as yup from "yup";
-import { postResponsive, putResponsive } from "../../../../services/api";
+import {
+  getAllUsers,
+  getAllUsersServers,
+  postResponsive,
+  putResponsive,
+} from "../../../../services/api";
 
-export function ResponsiveFormContainer({
+export function ResponsiveThirdFormContainer({
   setPreviewFile,
   isReadMode,
   isUpdateMode,
   isInsertMode,
+  isRenewMode,
   responsiveData,
+  isThird,
 }) {
   const [file, setFile] = useState(null);
+  const [nextResponsive, setNextResponsive] = useState(null);
+  const [beforeResponsive, setBeforeResponsive] = useState(null);
   const [initialValues, setInitialValues] = useState(
     responsiveData
       ? responsiveData
@@ -23,26 +32,29 @@ export function ResponsiveFormContainer({
           phone: "",
           immediately_chief: "",
           email_immediately_chief: "",
-          servers: [
-            {
-              windows_server: "",
-              domain: "",
-              account: "",
-            },
-          ],
+          servers: isThird ? [{
+            hostname: "",
+            domain_server: "",
+            ip_address: "",
+          }
+          ] : [{
+            brand: "", model: "", serial_number: "", location: ""
+          }],
+
           //windows_server: data.windows_server ?? "",
           //domain: data.domain ?? "",
           //account: data.account ?? "",
           start_date: "",
           end_date: "",
-          file_format: "",
+          //file_format: "",
+          is_new_user: 0,
+          before_responsive_id: null,
+          after_responsive_id: null,
           file: null,
         }
   );
 
-  useEffect(() => {
-    console.log("Cambio en iV", initialValues);
-  }, [initialValues]);
+  const [startDate, setStartDate] = useState(null);
 
   const ResponsiveSchema = yup.object().shape({
     remedy: yup.string().required("Remedy es un campo obligatorio"),
@@ -57,11 +69,25 @@ export function ResponsiveFormContainer({
       .required("Nombre de jefe es un campo obligatorio"),
     email_immediately_chief: yup.string().notRequired(),
     servers: yup.array().of(
-      yup.object().shape({
-        windows_server: yup.string(),
-        domain: yup.string(),
-        account: yup.string(),
-      })
+      isThird
+        ? yup.object().shape({
+            hostname: yup.string().required("Hostanme es un campo obligatorio"),
+            domain_server: yup
+              .string()
+              .required("Dominio es un campo obligatorio")
+              .oneOf(["un", "pemex"], "El dominio debe ser 'un' o 'pemex'"),
+            ip_address: yup.string().required("IP es un campo obligatorio"),
+          })
+        : yup.object().shape({
+            brand: yup.string().required("Marca es un campo obligatorio"),
+            model: yup.string().required("Modelo es un campo obligatorio"),
+            serial_number: yup
+              .string()
+              .required("Número serial es un campo obligatorio"),
+            location: yup
+              .string()
+              .required("Ubicación es un campo obligatorio"),
+          })
     ),
     //windows_server: yup
     //  .string()
@@ -76,14 +102,30 @@ export function ResponsiveFormContainer({
         yup.ref("start_date"),
         "La fecha final debe ser posterior a la fecha de inicio"
       ),
-    file_format: yup
+    /*file_format: yup
       .number()
-      .required("Formato del archivo es un campo obligatorio"),
+      .required("Formato del archivo es un campo obligatorio")
+      .oneOf([3, 4], "El formato del archivo debe ser 3 o 4"),
+      */
+    // 1: newUser, 2:existentUser
+    is_new_user: yup
+      .mixed()
+      .required("Usuario es Requerido")
+      .oneOf([1, 2], "Usuario es Requerido"),
+    after_responsive_id: yup.number().notRequired(),
+    before_responsive_id: yup.number().notRequired(),
     file: yup.mixed().required("Archivo es necesario"),
   });
 
   const handleSubmit = async (values, actions) => {
+    values.file_format = isThird ? 3 : 4;
     console.log("Values", values);
+    values.after_responsive_id =
+      values.after_responsive_id === "" ? null : values.after_responsive_id;
+    values.before_responsive_id =
+      values.before_responsive_id === "" ? null : values.before_responsive_id;
+
+    //add file format
 
     const formData = new FormData();
     const data = Object.keys(values).reduce((acc, key) => {
@@ -95,7 +137,7 @@ export function ResponsiveFormContainer({
     formData.append("file", file);
     formData.append("data", JSON.stringify(data));
     let result;
-    if (isInsertMode) {
+    if (isInsertMode || isRenewMode) {
       result = await postResponsive(formData);
     } else if (isUpdateMode) {
       result = await putResponsive(initialValues.resp_id, formData);
@@ -115,36 +157,45 @@ export function ResponsiveFormContainer({
   };
 
   const handleAutoResponsive = (data) => {
-    console.log("Se llama a gandleAutoResponsive con los datos de", data.file);
+    console.log("Se llama a handleAutoResponsive con los datos de", data.file);
     setInitialValues({
       resp_id: "",
       remedy: data.remedy,
       token: data.token,
-      user_name: data.user_name,
+      user_name: data.user_server_id ?? data.user_name ?? "",
       email: data.email,
       phone: "",
       immediately_chief: data.immediately_chief,
       email_immediately_chief: "",
-      servers: [
-        {
-          windows_server: "",
-          domain: "",
-          account: "",
-        },
-      ],
+      servers: [],
       //windows_server: data.windows_server ?? "",
       //domain: data.domain ?? "",
       //account: data.account ?? "",
       start_date: data.start_date,
       end_date: data.end_date,
-      file_format: data.file_format,
+      //file_format: data.file_format,
+      is_new_user: false,
+      after_responsive_id: null,
+      before_responsive_id: null,
       file: data.file,
     });
   };
 
+  const handleNextResponsiveProcess = (idResp) => {
+    const id = Object.keys(idResp)[0] ?? null;
+    console.log("EL ID RESP: ", id);
+    setNextResponsive(id);
+  };
+
+  const handleBeforeResponsiveProcess = (idResp) => {
+    const id = Object.keys(idResp)[0] ?? null;
+    console.log("EL ID RESP: ", id);
+    setBeforeResponsive(id);
+  };
+
   return (
     <>
-      <ResponsiveFormView
+      <ResponsiveThirdFormView
         key={JSON.stringify(initialValues)}
         schema={ResponsiveSchema}
         initialValues={initialValues}
@@ -153,6 +204,11 @@ export function ResponsiveFormContainer({
         isReadMode={isReadMode}
         isUpdateMode={isUpdateMode}
         isInsertMode={isInsertMode}
+        isRenewMode={isRenewMode}
+        isThird={isThird}
+        handleNextResponsiveProcess={handleNextResponsiveProcess}
+        handleBeforeResponsiveProcess={handleBeforeResponsiveProcess}
+        //usersServersValues={usersServersDataSelect}
         handleAutoResponsive={handleAutoResponsive}
       />
     </>

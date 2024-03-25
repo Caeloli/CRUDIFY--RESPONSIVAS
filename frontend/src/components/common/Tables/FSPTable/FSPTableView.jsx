@@ -1,5 +1,5 @@
 import { flexRender } from "@tanstack/react-table";
-import React, { useEffect } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   Button,
   ButtonGroup,
@@ -30,6 +30,8 @@ export function FSPTableView({
   fixedColumns,
   globalFilter,
   setGlobalFilter,
+  FilterComponent,
+  tableStyles,
 }) {
   useEffect(() => {
     if (table.getState().columnFilters[0]?.id === "fullName") {
@@ -82,14 +84,15 @@ export function FSPTableView({
           </InputGroup>
         </Col>
       </Row>
-      <Row style={{ maxHeight: "70vh", overflow: "scroll" }} className="mt-3">
-        <Col sm={12} className="text-bg-success">
+      <Row className="mt-3">
+        <Col sm={12}>
           <Table
             striped
             bordered
             hover
             responsive
             className="custom-table-crud-responsives"
+            style={tableStyles}
           >
             <thead>
               {table.getHeaderGroups().map((headerGroup) => (
@@ -102,21 +105,21 @@ export function FSPTableView({
                           : undefined
                       )
                       .filter((value) => value != undefined)[0];
-                    console.log(position);
                     return (
                       <th
                         key={header.id}
-                        className={position}
+                        className={`${position}` }
                         colSpan={header.colSpan}
+                        
                       >
                         {header.isPlaceholder ? null : (
                           <div
-                            {...{
+                             {...{
                               className: header.column.getCanSort()
                                 ? "cursor-pointer select-none fixed-width"
                                 : "",
                               style: header.column.getCanSort()
-                                ? { cursor: "pointer", minWidth: "100%"}
+                                ? { cursor: "pointer", minWidth: "100%" }
                                 : {},
                               onClick: header.column.getToggleSortingHandler(),
                             }}
@@ -139,12 +142,22 @@ export function FSPTableView({
                             ) : null*/}
                           </div>
                         )}
-                        {header.column.getCanFilter()
-                          ? /*<div>
-                            <FormControl type="text"></FormControl>
+                        
+                        
+                        {header.column.getCanFilter() ? (
+                          <div>
+                            {FilterComponent ? (
+                              <>
+                                <FilterComponent
+                                  column={header.column}
+                                  table={table}
+                                />
+                              </>
+                            ) : (
+                              <Filter column={header.column} table={table} />
+                            )}
                           </div>
-                          */ null
-                          : null}
+                        ) : null}
                       </th>
                     );
                   })}
@@ -152,29 +165,37 @@ export function FSPTableView({
               ))}
             </thead>
             <tbody>
-              {table.getRowModel().rows.map((row) => {
-                return (
-                  <tr key={row.id}>
-                    {row.getVisibleCells().map((cell) => {
-                      const position = fixedColumns
-                        .map((fixedColumn) =>
-                          cell.id.includes(fixedColumn.name)
-                            ? fixedColumn.position
-                            : undefined
-                        )
-                        .filter((value) => value != undefined)[0];
-                      return (
-                        <td key={cell.id} className={position}>
-                          {flexRender(
-                            cell.column.columnDef.cell,
-                            cell.getContext()
-                          )}
-                        </td>
-                      );
-                    })}
-                  </tr>
-                );
-              })}
+              {table.getRowModel().rows.length !== 0 ? (
+                table.getRowModel().rows.map((row) => {
+                  return (
+                    <tr key={row.id} >
+                      {row.getVisibleCells().map((cell) => {
+                        const position = fixedColumns
+                          .map((fixedColumn) =>
+                            cell.id.includes(fixedColumn.name)
+                              ? fixedColumn.position
+                              : undefined
+                          )
+                          .filter((value) => value != undefined)[0];
+                        return (
+                          <td key={cell.id} className={`${position} ${row.getIsSelected() ? "bg-primary text-light" : ""}`}>
+                            {flexRender(
+                              cell.column.columnDef.cell,
+                              cell.getContext()
+                            )}
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  );
+                })
+              ) : (
+                <tr>
+                  <td colSpan={"100%"} className="text-center">
+                    No Data
+                  </td>
+                </tr>
+              )}
             </tbody>
           </Table>
         </Col>
@@ -199,8 +220,7 @@ export function FSPTableView({
           <InputGroup.Text>
             <strong>
               {" "}
-              {table.getState().pagination.pageIndex + 1} de
-              {" "}
+              {table.getState().pagination.pageIndex + 1} de{" "}
               {table.getPageCount()}
             </strong>
           </InputGroup.Text>
@@ -238,4 +258,102 @@ export function FSPTableView({
       {/*<pre>{JSON.stringify(table.getState().pagination, null, 2)}</pre>*/}
     </Container>
   );
+}
+
+function Filter({ column, table }) {
+  const firstValue = table
+    .getPreFilteredRowModel()
+    .flatRows[0]?.getValue(column.id);
+
+  const columnFilterValue = column.getFilterValue();
+
+  const sortedUniqueValues = useMemo(
+    () =>
+      typeof firstValue === "number"
+        ? []
+        : Array.from(column.getFacetedUniqueValues().keys()).sort(),
+    [column.getFacetedUniqueValues()]
+  );
+
+  return typeof firstValue === "number" ? (
+    <div>
+      <div className="flex space-x-2">
+        <DebouncedInput
+          type="number"
+          min={Number(column.getFacetedMinMaxValues()?.[0] ?? "")}
+          max={Number(column.getFacetedMinMaxValues()?.[1] ?? "")}
+          value={columnFilterValue?.[0] ?? ""}
+          onChange={(value) =>
+            column.setFilterValue((old) => [value, old?.[1]])
+          }
+          placeholder={`Min ${
+            column.getFacetedMinMaxValues()?.[0]
+              ? `(${column.getFacetedMinMaxValues()?.[0]})`
+              : ""
+          }`}
+          className="w-24 border shadow rounded"
+        />
+        <DebouncedInput
+          type="number"
+          min={Number(column.getFacetedMinMaxValues()?.[0] ?? "")}
+          max={Number(column.getFacetedMinMaxValues()?.[1] ?? "")}
+          value={columnFilterValue?.[1] ?? ""}
+          onChange={(value) =>
+            column.setFilterValue((old) => [old?.[0], value])
+          }
+          placeholder={`Max ${
+            column.getFacetedMinMaxValues()?.[1]
+              ? `(${column.getFacetedMinMaxValues()?.[1]})`
+              : ""
+          }`}
+          className="w-24 border shadow rounded"
+        />
+      </div>
+      <div className="h-1" />
+    </div>
+  ) : (
+    <>
+      <datalist id={column.id + "list"}>
+        {sortedUniqueValues.slice(0, 5000).map((value) => (
+          <option value={value} key={value} />
+        ))}
+      </datalist>
+      <DebouncedInput
+        type="text"
+        value={columnFilterValue ?? ""}
+        onChange={(value) => column.setFilterValue(value)}
+        placeholder={`Search... (${column.getFacetedUniqueValues().size})`}
+        className="w-36 border shadow rounded"
+        list={column.id + "list"}
+      />
+      <div className="h-1" />
+    </>
+  );
+}
+
+function DebouncedInput({
+  value: initialValue,
+  onChange,
+  debounce = 500,
+  ...props
+}) {
+  const [value, setValue] = useState(initialValue);
+
+  useEffect(() => {
+    setValue(initialValue);
+  }, [initialValue]);
+
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      onChange(value);
+    }, debounce);
+
+    return () => clearTimeout(timeout);
+  }, [value]);
+
+  return React.createElement("input", {
+    ...props,
+    value: value,
+    onChange: (e) => setValue(e.target.value),
+  });
 }

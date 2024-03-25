@@ -43,9 +43,20 @@ const fuzzySort = (rowA, rowB, columnId) => {
   return dir === 0 ? sortingFns.alphanumeric(rowA, rowB, columnId) : dir;
 };
 
-export function FSPTableContainer({ data, columns, fixedColumns }) {
+export function FSPTableContainer({
+  data,
+  columns,
+  filter,
+  fixedColumns,
+  rowSelectionObject,
+  filterSelectionObject,
+  pRowSelection,
+  pSetRowSelection,
+  tableStyles,
+}) {
   const [sorting, setSorting] = useState([]);
   const [columnFilters, setColumnFilters] = useState([]);
+  const [rowSelection, setRowSelection] = useState({});
   const [globalFilter, setGlobalFilter] = useState("");
   const rerender = React.useReducer(() => ({}), {})[1];
   const table = useReactTable({
@@ -55,9 +66,27 @@ export function FSPTableContainer({ data, columns, fixedColumns }) {
       fuzzy: fuzzyFilter,
     },
     state: {
-      columnFilters,
+      rowSelection: pRowSelection ?? rowSelection,
       globalFilter,
+      columnFilters,
     },
+    /**Row Selection */
+    enableRowSelection: false,
+    enableSubRowSelection: rowSelectionObject
+      ? rowSelectionObject.enableSubRowSelection ?? false
+      : false,
+    enableMultiRowSelection: rowSelectionObject
+      ? rowSelectionObject.enableMultiRowSelection ?? false
+      : false,
+    getRowId: (row) => row.resp_id,
+    onRowSelectionChange: pSetRowSelection ?? setRowSelection,
+
+    /**Filter */
+
+    enableColumnFilters: filterSelectionObject
+      ? filterSelectionObject.enableColumnFilters ?? false
+      : false,
+
     onColumnFiltersChange: setColumnFilters,
     onGlobalFilterChange: setGlobalFilter,
     globalFilterFn: fuzzyFilter,
@@ -68,16 +97,20 @@ export function FSPTableContainer({ data, columns, fixedColumns }) {
     getFacetedRowModel: getFacetedRowModel(),
     getFacetedUniqueValues: getFacetedUniqueValues(),
     getFacetedMinMaxValues: getFacetedMinMaxValues(),
+
     debugTable: true,
     debugHeaders: true,
     debugColumns: false,
   });
+
   return (
     <FSPTableView
       table={table}
       fixedColumns={fixedColumns}
+      FilterComponent={filter}
       globalFilter={globalFilter}
       setGlobalFilter={setGlobalFilter}
+      tableStyles={tableStyles}
     />
   );
 

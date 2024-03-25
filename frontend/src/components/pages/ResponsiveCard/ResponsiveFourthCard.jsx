@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { ResponsiveFormContainer } from "./ResponsiveForm/ResponsiveFormContainer";
 import { ResponsiveViewerContainer } from "./ResponsiveViewer/ResponsiveViewerContainer";
 import { Col, Container, Row } from "react-bootstrap";
 import "./ResponsiveCard.scss";
 import { useParams } from "react-router-dom";
 import { getFile, getResponsive } from "../../../services/api";
+import { ResponsiveFourthFormContainer } from "./ResponsiveFourthForm/ResponsiveFourthFormContainer";
 
-export function ResponsiveCard({ isInsertMode, isReadMode, isUpdateMode }) {
+export function ResponsiveFourthCard({ isInsertMode, isReadMode, isUpdateMode }) {
   const [responsiveData, setResponsiveData] = useState(null);
   const [previewFile, setPreviewFile] = useState(null);
   const { fileID } = useParams();
@@ -69,7 +69,7 @@ export function ResponsiveCard({ isInsertMode, isReadMode, isUpdateMode }) {
       <Row>
         <Col md="6">
           {isInsertMode && (
-            <ResponsiveFormContainer
+            <ResponsiveFourthFormContainer
               isInsertMode={isInsertMode}
               isReadMode={isReadMode}
               isUpdateMode={isUpdateMode}
@@ -77,7 +77,7 @@ export function ResponsiveCard({ isInsertMode, isReadMode, isUpdateMode }) {
             />
           )}
           {(isReadMode || isUpdateMode) && responsiveData && previewFile && (
-            <ResponsiveFormContainer
+            <ResponsiveFourthFormContainer
               isInsertMode={isInsertMode}
               isReadMode={isReadMode}
               isUpdateMode={isUpdateMode}

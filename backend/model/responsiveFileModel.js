@@ -16,6 +16,13 @@ const ResponsiveFiles = (sequelize) => {
           key: "user_id",
         },
       },
+      user_servers_id_fk: {
+        type: DataTypes.INTEGER,
+        references: {
+          model: "users_servers",
+          key: "user_server_id",
+        },
+      },
       state_id_fk: {
         type: DataTypes.INTEGER,
         references: {
@@ -28,41 +35,6 @@ const ResponsiveFiles = (sequelize) => {
         allowNull: false,
         validate: {
           len: [1, 30],
-        },
-      },
-      token: {
-        type: DataTypes.STRING(30),
-        allowNull: false,
-        validate: {
-          len: [1, 30],
-        },
-      },
-      user_name: {
-        type: DataTypes.STRING(80),
-        allowNull: false,
-        validate: {
-          len: [1, 80],
-        },
-      },
-      email: {
-        type: DataTypes.STRING(50),
-        allowNull: false,
-        validate: {
-          isEmail: true,
-        },
-      },
-      phone: {
-        type: DataTypes.STRING(20),
-        allowNull: true,
-        validate: {
-          len: [0, 20],
-        },
-      },
-      immediately_chief: {
-        type: DataTypes.STRING(50),
-        allowNull: true,
-        validate: {
-          len: [1, 50],
         },
       },
       start_date: {
@@ -86,10 +58,18 @@ const ResponsiveFiles = (sequelize) => {
         type: DataTypes.INTEGER,
         allowNull: false,
       },
-      file_route: {
-        type: DataTypes.TEXT,
-        allowNull: false,
+      before_resp_id_fk: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
       },
+      after_resp_id_fk: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
+      comment: {
+        type: DataTypes.TEXT,
+        allowNull: true,
+      }
     },
     {
       tableName: "responsive_files", // Specify the table name in your database

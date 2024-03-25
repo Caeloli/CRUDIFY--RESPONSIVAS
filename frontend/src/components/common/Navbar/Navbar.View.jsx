@@ -10,6 +10,7 @@ import { FaFileAlt, FaMobileAlt, FaUser, FaHome } from "react-icons/fa";
 import { IoSettingsSharp, IoExitOutline } from "react-icons/io5";
 import "./Navbar.scss";
 import { decodeToken } from "../../../func/func";
+import { FaBuildingUser, FaServer } from "react-icons/fa6";
 export function NavbarView({ handleLogOut }) {
   const usr = decodeToken();
   return (
@@ -49,20 +50,43 @@ export function NavbarView({ handleLogOut }) {
                     <p className="m-0">General</p>
                   </Link>
                 </NavItem>
-                <NavDropdown
-                  title={
-                    <>
-                      <FaFileAlt /> Responsivas{" "}
-                    </>
-                  }
-                >
-                  <NavItem>
-                    <Link to={"/Files"}>Tablero</Link>
-                  </NavItem>
-                  <NavItem>
-                    <Link to={"/FilesForm"}>Crear</Link>
-                  </NavItem>
-                </NavDropdown>
+                <NavItem>
+                  <Link
+                    to={"/Files"}
+                    className="d-flex gap-1 align-items-center"
+                  >
+                    <FaFileAlt />
+                    <p className="m-0">Responsivas</p>
+                  </Link>
+                </NavItem>
+
+                <NavItem>
+                  <Link
+                    to={"/UsersServers"}
+                    className="d-flex gap-1 align-items-center"
+                  >
+                    <FaBuildingUser />
+                    <p className="m-0">Usuario Servidores</p>
+                  </Link>
+                </NavItem>
+                <NavItem>
+                  <Link
+                    to={"/ServersF3"}
+                    className="d-flex gap-1 align-items-center"
+                  >
+                    <FaServer />
+                    <p className="m-0">Servidores Formato 3</p>
+                  </Link>
+                </NavItem>
+                <NavItem>
+                  <Link
+                    to={"/ServersF4"}
+                    className="d-flex gap-1 align-items-center"
+                  >
+                    <FaServer />
+                    <p className="m-0">Servidores Formato 4</p>
+                  </Link>
+                </NavItem>
                 {usr.user_type === 2 && (
                   <NavItem>
                     <Link

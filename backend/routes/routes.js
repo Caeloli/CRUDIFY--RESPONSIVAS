@@ -8,6 +8,7 @@ const path = require("path");
 const db = require("../config/database/sequelize");
 const responsiveFileController = require("../controller/responsiveFileController");
 const serverController = require("../controller/serversController");
+const userServerController = require("../controller/userServerController");
 const fileController = require("../controller/fileController");
 const userController = require("../controller/usersController");
 const authAllowController = require("../controller/authorizationAllowController");
@@ -15,18 +16,20 @@ const authReqController = require("../controller/authorizationRequestController"
 const emailNotifyController = require("../controller/emailsNotifyController");
 const auditLogController = require("../controller/auditLogController");
 const authServices = require("../services/authServices");
+const responsiveServices = require("../services/responsiveServices");
 const utils = require("../utils/functions");
-const {
-  updateTelegramBotToken,
-  updateTelegramChatId,
-  updateNotificationTime,
-} = require("../config");
-const { sendNotification, startBot } = require("../services/bot/tbot");
-const initializeScheduler = require("../services/schedule/scheduler");
+//const {
+//  updateTelegramBotToken,
+//  updateTelegramChatId,
+//  updateNotificationTime,
+//} = require("../config");
+//const { sendNotification, startBot } = require("../services/bot/tbot");
+
 const {
   postgreSQLUpdateResponsiveNotficationsState,
 } = require("../services/dbServices");
 const globals = require("../config/globalVariables");
+const { error } = require("console");
 
 //const responsiveFileModel = require("../model/responsivefile.model")
 const salt = process.env.SALT;
@@ -209,57 +212,145 @@ router.post("/auditlog/file-restore/:id", async (req, res) => {
  */
 
 router.post("/responsive-file", upload.single("file"), async (req, res) => {
-  try {
-    //Retrieve of data
-    const file = req.file;
-    const data = req.body.data;
-    console.log("File es: ", file);
-    console.log("Data es: ", data);
-    //Save file in path
-    const filePath = path.join(__dirname, "..", "uploads", "responsive");
-    //Code of unique name of file
-    const uniqueName = utils.generateUniqueFileName(file.originalname);
-    fs.writeFileSync(path.join(filePath, uniqueName), file.buffer);
+  /**
+   * Retrieve Data
+   * Check if there's a before(renew) or after responsive ID
+   *    If there's a before responsive ID
+   *       Check if that responsive doesn't have an already after_responsive
+   *          If it does -> error
+   *    If there's an after responsive ID
+   *       Check if that responsive doesn't have an already before_responsive
+   *          If it does -> error
+   * Check if user is new or exists
+   * If it's new
+   *    Store new User
+   *    Store responsive
+   *    Store servers
+   *    Store file
+   * Else
+   *    Look for old User
+   *    Store responsive
+   *    Store servers
+   *    Store file
+   * Return to client result
+   */
 
-    const { resp_id, ...fileDataWithoutRespId } = JSON.parse(data);
-    const responsiveFileStored =
+  try {
+    const file = req.file;
+    const data = JSON.parse(req.body.data);
+    const user_id = req.user_id;
+    console.log("La DATA: ", data);
+    if (!!data.after_responsive_id || !!data.before_responsive_id) {
+      if (data.after_responsive_id) {
+        if (
+          await responsiveServices.checkIfThereIsBeforeRespID(
+            data.after_responsive_id
+          )
+        ) {
+          throw Error(
+            `Responsive with ID ${data.after_resp_id} is renovation of another responsive`
+          );
+        }
+      }
+      if (data.before_responsive_id) {
+        if (
+          await responsiveServices.checkIfThereIsAfterRespID(
+            data.before_responsive_id
+          )
+        ) {
+          throw Error(
+            `Responsive with ID ${data.before_resp_id} has a renovation already`
+          );
+        }
+      }
+    }
+
+    let userServersResult;
+    if (data.is_new_user === 1) {
+      userServersResult = await userServerController.insertUserServer({
+        user_server_username: data.user_name,
+        email: data.email,
+        token: data.token,
+        phone: data.phone,
+        immediately_chief: data.immediately_chief,
+        immediately_chief_email: data.email_immediately_chief,
+      });
+    } else if (data.is_new_user === 2) {
+      userServersResult = await userServerController.getUserServer(
+        data.user_name
+      );
+    } else {
+      throw error;
+    }
+    const renewedResponsive = data.before_responsive_id
+      ? await responsiveFileController.getResponsiveFile(
+          data.before_responsive_id
+        )
+      : null;
+    const nextResponsive = data.after_responsive_id
+      ? await responsiveFileController.getResponsiveFile(
+          data.after_responsive_id
+        )
+      : null;
+
+    const responsiveResult =
       await responsiveFileController.insertResponsiveFile({
-        ...fileDataWithoutRespId,
-        file_route: path.join(filePath, uniqueName),
-        user_id_fk: globals.adminUser.user_id,
+        user_id_fk: user_id,
+        user_servers_id_fk: userServersResult.user_server_id,
+        remedy: data.remedy,
+        start_date: data.start_date,
+        end_date: data.end_date,
+        file_format: data.file_format,
+        before_resp_id_fk: renewedResponsive?.resp_id ?? null,
+        after_resp_id_fk: nextResponsive?.resp_id ?? null,
       });
 
-    const { servers } = JSON.parse(data);
-    const insertServers = async () => {
-      for (const server of servers) {
+    if (renewedResponsive) {
+      responsiveFileController.updateResponsiveFile(renewedResponsive.resp_id, {
+        state_id_fk: 6,
+        after_resp_id_fk: responsiveResult.resp_id,
+      });
+    }
+
+    const fileResult = await fileController.insertFile({
+      file_original_name: file.originalname,
+      file_unique_name: utils.generateUniqueFileName(file.originalname),
+      resp_id_fk: responsiveResult.resp_id,
+      file_content: file.buffer,
+    });
+
+    const insertServersF3 = async () => {
+      for (const server of data.servers) {
         const serverStored = await serverController.insertServer({
-          server_name: server.windows_server,
-          account: server.account,
-          domain: server.domain,
-          responsive_file_id_fk: responsiveFileStored.resp_id,
+          hostname: server.hostname,
+          domain_server: server.domain_server,
+          ip_address: server.ip_address,
+          responsive_file_id_fk: responsiveResult.resp_id,
         });
         // Handle serverStored if needed
       }
     };
-    if (servers.length > 0) {
-      await insertServers();
-    }
-    /*const serverStored = await serverController.insertServer({
-      ...JSON.parse(data),
-      resp_id_fk: responsiveFileStored.resp_id,
-    });
-    */
 
-    const fileData = {
-      file_original_name: file.originalname,
-      file_unique_name: uniqueName,
-      resp_id_fk: responsiveFileStored.resp_id,
+    const insertServersF4 = async () => {
+      for (const server of data.servers) {
+        const serverStored = await serverController.insertServer({
+          brand: server.brand,
+          model: server.model,
+          serial_number: server.serial_number,
+          location: server.location,
+          responsive_file_id_fk: responsiveResult.resp_id,
+        });
+        // Handle serverStored if needed
+      }
     };
 
-    const fileDataStored = await fileController.insertFile(fileData);
-
+    if (data.servers.length > 0) {
+      if (data.file_format === 3) await insertServersF3();
+      else if (data.file_format === 4) await insertServersF4();
+    }
     return res.status(200).json({
-      message: `File uploaded successfully with ID: ${responsiveFileStored.resp_id}`,
+      message: `File uploaded successfully with ID: `,
+      //${responsiveFileStored.resp_id}
     });
   } catch (error) {
     console.log("Error uploading file", error);
@@ -269,83 +360,195 @@ router.post("/responsive-file", upload.single("file"), async (req, res) => {
 
 router.put("/responsive-file/:id", upload.single("file"), async (req, res) => {
   try {
+    /**
+     * Receive data (responsive, userServer, servers)
+     * Check if responsive exists
+     *    If exists -> continue;
+     *    else -> error;
+     * If responsive exists, check format
+     *    If format changes -> Error
+     *    else -> continue
+     *
+     * If state_id_fk = 5 => Update in db and return
+     *
+     * Check is userServers is a new user or an existent user
+     *  if is new -> insert new user and get id
+     *  else -> get existent user and get id
+     * Check if file is undefined
+     *  if file is undefined -> continue;
+     *  else -> update file
+     * Update data from responsive
+     *
+     * Delete previous servers
+     * Insert new servers
+     * return successful
+     *
+     */
+
+    console.log("Se llama a data update");
     const id = req.params.id;
     const file = req.file;
+    console.log("req: ", req.body.data);
     const data = JSON.parse(req.body.data);
-    console.log("El id es:", id);
-    console.log("El file es:", file);
-    console.log("DATA ES: ", data);
-    // Get existing responsive file
-    const responsiveFile = await responsiveFileController.getResponsiveFile(id);
+    console.log("DATA UPDATE: ", data);
+    console.log("FILE UPDATE: ", file);
+    const user_id = req.user_id;
 
-    // Save the old PDF route for later deletion
-    const oldPdfRoute = responsiveFile.file_route;
+    const responsiveResult = await responsiveFileController.getResponsiveFile(
+      data.resp_id
+    );
+
+    if (!responsiveResult) {
+      throw new Error("Responsive file does not exist.");
+    }
+
+    if (!!data.state_id_fk) {
+      if (data.state_id_fk === 5) {
+        const result = await responsiveFileController.updateResponsiveFile(
+          responsiveResult.resp_id,
+          data
+        );
+        return res.status(200).json({
+          message: `Responsive cancelled with ID: ${result.resp_id}`,
+          //${responsiveFileStored.resp_id}
+        });
+      }
+    }
+
+    if (responsiveResult.file_format !== data.file_format) {
+      throw new Error("File format cannot be changed.");
+    }
+
+    if (!!data.after_responsive_id || !!data.before_responsive_id) {
+      if (
+        data.after_responsive_id &&
+        data.after_responsive_id !== responsiveResult.after_resp_id_fk
+      ) {
+        if (
+          await responsiveServices.checkIfThereIsBeforeRespID(
+            data.after_responsive_id
+          )
+        ) {
+          throw Error(
+            `Responsive with ID ${data.after_resp_id} is a renovation of another responsive`
+          );
+        }
+      }
+      if (
+        data.before_responsive_id &&
+        data.before_responsive_id !== responsiveResult.before_resp_id_fk
+      ) {
+        if (
+          await responsiveServices.checkIfThereIsAfterRespID(
+            data.before_responsive_id
+          )
+        ) {
+          throw Error(
+            `Responsive with ID ${data.before_resp_id} has already been renovated`
+          );
+        }
+      }
+    }
+
+    let userServersResult;
+    if (data.is_new_user === 1) {
+      userServersResult = await userServerController.insertUserServer({
+        user_server_username: data.user_name,
+        email: data.email,
+        token: data.token,
+        phone: data.phone,
+        immediately_chief: data.immediately_chief,
+        immediately_chief_email: data.email_immediately_chief,
+      });
+    } else if (data.is_new_user === 2) {
+      userServersResult = await userServerController.getUserServer(
+        data.user_name
+      );
+    } else {
+      throw new Error("Invalid user status.");
+    }
 
     if (file) {
-      // Create and save the updated file
-      const filePath = path.join(__dirname, "..", "uploads", "responsive");
-      const uniqueName = utils.generateUniqueFileName(file.originalname);
-      fs.writeFileSync(path.join(filePath, uniqueName), file.buffer);
-
-      // Update file data in the database
-      const fileData = {
+      await fileController.updateFileByRespIDFK(responsiveResult.resp_id, {
         file_original_name: file.originalname,
-        file_unique_name: uniqueName,
-        resp_id_fk: responsiveFile.resp_id,
-      };
-      const fileDataStored = await fileController.updateFileByRespIDFK(
-        responsiveFile.resp_id,
-        fileData
-      );
-      // Update responsive file data
-      const responsiveFileStored =
-        await responsiveFileController.updateResponsiveFile(id, {
-          ...data,
-          file_route: path.join(filePath, uniqueName),
-          user_id_fk: globals.adminUser.user_id,
-        });
-
-      // Delete the old file
-      console.log("Borrado archivo anterior");
-      try {
-        fs.unlinkSync(oldPdfRoute);
-      } catch (error) {
-        console.log("Old file wasn't deleted or found");
-      }
-      console.log("Envío de datos");
-      return res.status(200).json({
-        message: `Responsive File updated successfully with ID: ${responsiveFileStored.resp_id}`,
-      });
-    } else {
-      const servers = await serverController.getServersByRespIDFK(
-        responsiveFile.resp_id
-      );
-      //Delete servers
-      if (servers)
-        servers.forEach((server) => {
-          serverController.deleteServer(server.server_id);
-        });
-      //Create new servers
-      if (data.servers) {
-        console.log("Insertar servidores: ", data.servers);
-        data.servers.forEach((server) => {
-          serverController.insertServer({
-            server_name: server.windows_server,
-            account: server.account,
-            domain: server.domain,
-            responsive_file_id_fk: data.resp_id,
-          });
-        });
-      }
-      const responsiveFileStored =
-        await responsiveFileController.updateResponsiveFile(id, {
-          ...data,
-          user_id_fk: globals.adminUser.user_id,
-        });
-      return res.status(200).json({
-        message: `Responsive File updated successfully with ID: ${responsiveFileStored.resp_id}`,
+        file_unique_name: utils.generateUniqueFileName(file.originalname),
+        file_content: file.buffer,
       });
     }
+
+    //Update before and after responsive_id from OLD responsives
+    console.log("ResponsiveFilesdasdsaads: ", responsiveResult);
+    if (!!responsiveResult.before_resp_id_fk)
+      console.log("SE ACTUALIZA EL BEFORE");
+    responsiveFileController.updateResponsiveFile(
+      responsiveResult.before_resp_id_fk,
+      {
+        after_resp_id_fk: null,
+      }
+    );
+    if (!!responsiveResult.after_resp_id_fk)
+      responsiveFileController.updateResponsiveFile(
+        responsiveResult.after_resp_id_fk,
+        {
+          before_resp_id_fk: null,
+        }
+      );
+
+    await responsiveFileController.updateResponsiveFile(
+      responsiveResult.resp_id,
+      {
+        user_id_fk: user_id,
+        user_servers_id_fk: userServersResult.user_server_id,
+        remedy: data.remedy,
+        start_date: data.start_date,
+        end_date: data.end_date,
+        file_format: responsiveResult.file_format,
+        after_resp_id_fk: data.after_responsive_id,
+        before_resp_id_fk: data.before_responsive_id,
+      }
+    );
+
+    //Update before and after responsive_id from NEW responsives
+    if (!!data.before_responsive_id)
+      responsiveFileController.updateResponsiveFile(data.before_responsive_id, {
+        after_resp_id_fk: responsiveResult.resp_id,
+      });
+    if (!!data.after_responsive_id)
+      responsiveFileController.updateResponsiveFile(data.after_responsive_id, {
+        before_resp_id_fk: responsiveResult.resp_id,
+      });
+
+    const servers = await serverController.getServersByRespIDFK(
+      responsiveResult.resp_id
+    );
+
+    servers.forEach((server) => {
+      serverController.deleteServer(server.server_id);
+    });
+
+    data.servers.forEach((server) => {
+      if (responsiveResult.file_format === 3)
+        serverController.insertServer({
+          hostname: server.hostname,
+          domain_server: server.domain_server,
+          ip_address: server.ip_address,
+          responsive_file_id_fk: responsiveResult.resp_id,
+        });
+      else if (responsiveResult.file_format === 4) {
+        serverController.insertServer({
+          brand: server.brand,
+          model: server.model,
+          serial_number: server.serial_number,
+          location: server.location,
+          responsive_file_id_fk: responsiveResult.resp_id,
+        });
+      }
+    });
+
+    return res.status(200).json({
+      message: `Responsive updated with ID: ${responsiveResult.resp_id}`,
+      //${responsiveFileStored.resp_id}
+    });
   } catch (error) {
     console.log("Error", error);
     return res
@@ -358,14 +561,19 @@ router.get("/responsive-file/:id", async (req, res) => {
   try {
     const id = req.params.id;
     const responsiveFile = await responsiveFileController.getResponsiveFile(id);
-    const servers = await serverController.getServersByRespIDFK(
-      responsiveFile.resp_id
-    );
-    const serversArray = servers.map((server) => server.dataValues);
+
     if (responsiveFile) {
+      const servers = await serverController.getServersByRespIDFK(
+        responsiveFile.resp_id
+      );
+      const usersServers = await userServerController.getUserServer(
+        responsiveFile.user_servers_id_fk
+      );
+      const serversArray = servers.map((server) => server.dataValues);
       return res.json({
         ...responsiveFile.dataValues,
         servers: serversArray || [],
+        ...usersServers.dataValues,
       });
     } else {
       return res.status(404).json({
@@ -398,14 +606,13 @@ router.delete("/responsive-file/:id", async (req, res) => {
     const id = req.params.id;
 
     // Actualizas estado de resposniva para eliminar
-    console.log("Actualización del estado");
+
     const responsiveFile = await responsiveFileController.updateResponsiveFile(
       id,
       {
         state_id_fk: 5,
       }
     );
-    console.log("REQUEST COMPLETEDES");
     //Genera instancia en auditlog
     await auditLogController.insertAuditLog({
       file_id_fk: responsiveFile.resp_id,
@@ -543,14 +750,14 @@ router.delete("/authrequest/:id", async (req, res) => {
 
 router.post("/authrequest/register", async (req, res) => {
   try {
-    const { user, userType } = req.body;
-    console.log("LA DATA EN AUTHREQUEST, REGISTER: ", user, userType);
+    const { affected_email, affected_type, chat_id } = req.body;
     const authRequest = await authReqController.insertAuthRequest({
       user_id_fk: globals.adminUser.user_id,
       action_id_fk: 1,
       request_date: new Date().getTime(),
-      affected_email: user,
-      affected_type: userType,
+      affected_email: affected_email,
+      affected_type: affected_type,
+      chat_id: chat_id,
     });
     return res.status(200).json({
       message: `Post authRequest successfully with ID: ${authRequest.request_id}`,
@@ -564,47 +771,60 @@ router.post("/authrequest/register", async (req, res) => {
 });
 
 /**
- * Email Notify
+ * Servers
  */
 
-router.post("/email-notify", async (req, res) => {
+router.post("/servers", async (req, res) => {
   try {
     const data = req.body.data;
-    const emailNotify = await emailNotifyController.insertEmailNotify(data);
+    const server = await serverController.insertServer(data);
     return res.status(200).json({
-      message: `Email Notify successfully inserted with ID: ${emailNotify.email_id}`,
+      message: `Server successfully inserted with ID: ${server.server_id}`,
     });
   } catch (error) {
-    console.log("Error", error);
-    return res
-      .status(500)
-      .json({ message: "Internal server error with email-notify" });
+    return res.status(500).json({
+      message: "Internal server error while inserting Servers",
+    });
   }
 });
 
-router.get("/email-notify", async (req, res) => {
+router.get("/servers", async (req, res) => {
   try {
-    const results = await emailNotifyController.getAllEmailsNotify();
-    return res.json(results);
+    const servers = await serverController.getAllServers();
+    return res.status(200).json(servers);
   } catch (error) {
     return res
       .status(500)
-      .json({ message: "Internal server error with authRequest" });
+      .json({ message: "Internal server error with User Servers" });
   }
 });
 
-router.delete("/email-notify/:id", async (req, res) => {
+/**
+ * User Servers
+ */
+
+router.post("/user-servers", async (req, res) => {
   try {
-    const id = req.params.id;
-    const emailNotify = await emailNotifyController.deleteEmailNotify(id);
+    const data = req.body.data;
+    const userServer = await userServerController.insertUserServer(data);
     return res.status(200).json({
-      message: `File deleted successfully with ID: ${emailNotify.email_id}`,
+      message: `User Server successfully inserted with ID: ${userServer.user_server_id}`,
     });
   } catch (error) {
-    console.log("Error", error);
     return res
       .status(500)
-      .json({ message: "Internal server error with email-notify" });
+      .json({ message: "Internal server error with User Servers" });
+  }
+});
+
+router.get("/user-servers", async (req, res) => {
+  try {
+    const userServers = await userServerController.getAllUserServer();
+    return res.json(userServers);
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ message: "Internal server error with userServers" });
   }
 });
 
@@ -616,13 +836,19 @@ router.get("/responsive-file/pdf/:id", async (req, res) => {
   try {
     const id = req.params.id;
     console.log("El ID es:", id);
-    const responsiveFile = await responsiveFileController.getResponsiveFile(id);
-    if (responsiveFile) {
-      const fileRoute = responsiveFile.file_route;
-      console.log("File route: ", fileRoute);
-      const file = fs.readFileSync(fileRoute);
+    const file = await fileController.getFileByRespIDFK(id);
+    if (file) {
+      console.log("El file es:", file);
+      console.log("El contenido del archivo es. ", file.file_content);
+
       res.setHeader("Content-Type", "application/pdf");
-      res.send(file);
+      res.setHeader(
+        "Content-Disposition",
+        `attachment; filename="${file.file_original_name}"`
+      ); // Optionally, specify filename for download
+
+      // Send file content as response
+      res.send(file.file_content);
     } else {
       return res.status(404).json({
         message: "Responsive File not found",
@@ -646,6 +872,13 @@ router.post(
       console.log("File is: ", file);
       console.log("Data is: ", formatData);
       const result = await utils.getDataFromPDF(formatData, file);
+
+      const userServer = await userServerController.getUserServerByName(
+        result.user_name
+      );
+      if (userServer) {
+        result.user_server_id = userServer.user_server_id;
+      }
       return res.status(200).json(result);
     } catch (error) {
       console.log("Error", error);
@@ -656,7 +889,7 @@ router.post(
   }
 );
 
-router.get("/notification/bot", async (req, res) => {
+/*router.get("/notification/bot", async (req, res) => {
   try {
     return res.status(200).json({
       api: process.env.TELEGRAM_BOT_TOKEN,
@@ -677,6 +910,7 @@ router.put("/notification/bot", async (req, res) => {
     if (data.api) {
       updateTelegramBotToken(data.api);
       startBot();
+
     }
     if (data.group) {
       sendNotification("Mensaje de Prueba. Tu grupo fue registrado", data.group)
@@ -709,6 +943,7 @@ router.put("/notification/bot", async (req, res) => {
   }
 });
 
+*/
 router.use(
   "/files",
   express.static(path.join(__dirname, "../uploads/responsive"))

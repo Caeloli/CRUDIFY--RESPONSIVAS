@@ -1,14 +1,14 @@
 import React from "react";
 
-export function ResponsiveViewerView({ file }) {
+export function ResponsiveViewerView({ file, width = "90%", height = "95%" }) {
   return (
-    <div className="mx-auto responsivecard-filepreview w-100">
+    <div className="mx-auto responsivecard-filepreview">
       
       {file ? (
         <iframe
           src={URL.createObjectURL(file)}
-          width={"90%"}
-          height={"95%"}
+          width={width}
+          height={height}
           title="title"
         />
       ) : (

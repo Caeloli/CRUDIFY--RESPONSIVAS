@@ -23,7 +23,7 @@ async function postgreSQLInitValuesDB() {
   const db = require("../config/database/sequelize"); // Import Sequelize instance
   try {
     const User = db.user;
-    const tbotUser = await User.findOne({
+    /*const tbotUser = await User.findOne({
       where: {
         email: "tbot@telegram.com",
       },
@@ -38,6 +38,7 @@ async function postgreSQLInitValuesDB() {
       });
       console.log("Crear una nueva cuenta de tbot");
     }
+    */
     const adminUser = await User.findOne({
       where: {
         email: "admin@admin.com",

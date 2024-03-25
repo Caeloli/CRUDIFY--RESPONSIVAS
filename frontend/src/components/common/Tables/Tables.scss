@@ -18,8 +18,10 @@
   background-color: red;
 }
 
-.custom-table-crud-responsives {
+.custom-table-crud-responsives {  
   font-size: 0.9rem;
+  vertical-align: middle;
+  /*min-height: 30rem;*/
   .fixed-width {
     width: 4rem;
   }

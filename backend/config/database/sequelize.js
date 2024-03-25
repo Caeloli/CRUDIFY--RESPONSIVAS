@@ -1,8 +1,8 @@
 const { Sequelize } = require("sequelize");
 const { dbConfigData } = require("./db");
 const { postgreSQLInitValuesDB } = require("../../services/dbServices");
-const { startBot } = require("../../services/bot/tbot");
-const initializeScheduler = require("../../services/schedule/scheduler");
+//const { startBot } = require("../../services/bot/tbot");
+//const initializeScheduler = require("../../services/schedule/scheduler");
 
 const sequelize = new Sequelize(
   dbConfigData.database,
@@ -35,6 +35,7 @@ const db = {};
   db.user = await require("../../model/usersModel")(sequelize);
   db.actions = await require("../../model/actionModel")(sequelize);
   db.auditLog = await require("../../model/auditLogModel")(sequelize);
+  db.userServer = await require("../../model/userServersModel")(sequelize);
   db.responsiveFiles = await require("../../model/responsiveFileModel")(
     sequelize
   );

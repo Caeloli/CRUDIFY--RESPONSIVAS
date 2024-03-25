@@ -1,9 +1,9 @@
 const db = require("../config/database/sequelize");
 
-const insertServer = async (fileData) => {
+const insertServer = async (serverData) => {
     try {
       const Servers = db.servers;
-      const results = await Servers.create(fileData);
+      const results = await Servers.create(serverData);
       return results;
     } catch (error) {
       console.log("Error", error);
@@ -29,10 +29,10 @@ const insertServer = async (fileData) => {
     }
   };
 
-  const updateServer = async (fileID, newServerData) => {
+  const updateServer = async (serverID, newServerData) => {
     try {
       const Servers = db.servers;
-      const server = await Servers.findByPk(fileID);
+      const server = await Servers.findByPk(serverID);
       if (server) {
         await server.update(newServerData);
         return server;
@@ -43,10 +43,10 @@ const insertServer = async (fileData) => {
     }
   };
   
-  const deleteServer = async (fileID) => {
+  const deleteServer = async (serverID) => {
     try {
       const Servers = db.servers;
-      const server = await Servers.findByPk(fileID);
+      const server = await Servers.findByPk(serverID);
       if (server) {
         await server.destroy();
         return true;
@@ -74,7 +74,7 @@ const insertServer = async (fileData) => {
   const getServer = async (serverID) => {
     try {
       const Servers = db.servers;
-      const servers = await Servers.findByPk(responsiveID);
+      const servers = await Servers.findByPk(serverID);
       if (servers) {
         return servers;
       } else {
@@ -111,6 +111,7 @@ const insertServer = async (fileData) => {
   module.exports = {
     insertServer,
     updateServer,
+    updateServerByRespIDFK,
     getServer,
     getServersByRespIDFK,
     getAllServers,

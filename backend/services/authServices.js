@@ -4,7 +4,7 @@ const bcrypt = require("bcrypt");
 const authAllowController = require("../controller/authorizationAllowController");
 const authReqController = require("../controller/authorizationRequestController");
 const userController = require("../controller/usersController");
-const { sendNotification } = require("./bot/tbot");
+const notificationServices = require("./axiosServices/notificationServices");
 require("dotenv").config();
 const salt = process.env.SALT;
 
@@ -51,10 +51,16 @@ const checkAuthRequest = async (requestId) => {
       const authRequestDeleted = await authReqController.deleteAuthRequest(
         authRequest.request_id
       );
-      sendNotification(
-        `Su usuario con el correo ${email} fue registrado correctamente. \nSu clave de acceso es: ${pswrd}`,
-        chat_id
+      notificationServices.sendNotificationEmail(
+        email,
+        "Inscripción al sistema PMXRESP",
+        `Su usuario con el correo ${email} fue registrado correctamente. \nSu clave de acceso es: ${pswrd}`
       );
+      if (!!chat_id)
+        notificationServices.sendNotificationTelegram(
+          chat_id,
+          `Su usuario con el correo ${email} fue registrado correctamente. \nSu clave de acceso es: ${pswrd}`
+        );
     } else {
       return;
     }

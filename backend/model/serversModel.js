@@ -16,24 +16,27 @@ const Servers = (sequelize) => {
           key: "resp_id",
         },
       },
-      server_name: {
-        type: DataTypes.STRING(60),
-        validate: {
-            len: [1, 60],
-          },
+      brand: {
+        type: DataTypes.STRING(255),
       },
-      account: {
-        type: DataTypes.STRING(60),
-        validate: {
-            len: [1, 60],
-          },
+      model: {
+        type: DataTypes.STRING(255),
       },
-      domain: {
-        type: DataTypes.STRING(60),
-        validate: {
-            len: [1, 60],
-          },
-      }
+      serial_number: {
+        type: DataTypes.STRING(255),
+      },
+      location: {
+        type: DataTypes.STRING(255),
+      },
+      hostname: {
+        type: DataTypes.STRING(255),
+      },
+      ip_address: {
+        type: DataTypes.STRING(255),
+      },
+      domain_server: {
+        type: DataTypes.ENUM("pemex", "un"),
+      },
     },
     {
       tableName: "servers",

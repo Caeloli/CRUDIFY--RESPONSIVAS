@@ -3,6 +3,7 @@ const cors = require("cors");
 const path = require("path");
 require("dotenv").config();
 const cookieParser = require("cookie-parser");
+const axios = require("axios");
 const jwt = require("jsonwebtoken");
 const logger = require("morgan");
 const config = require("./config/index").configPort();
@@ -13,28 +14,33 @@ const app = express();
 const bcrypt = require("bcrypt");
 const userController = require("./controller/usersController");
 const { verifyToken } = require("./utils/verifyJWTToken");
-const { startBot } = require("./services/bot/tbot");
-const initializeScheduler = require("./services/schedule/scheduler");
 const { postgreSQLInitValuesDB } = require("./services/dbServices");
+const emailServices = require("./services/axiosServices/notificationServices");
+const authReqController = require("./controller/authorizationRequestController");
+const globals = require("./config/globalVariables");
+const router = require("./routes/routes");
 
 const salt = process.env.SALT;
 const sk = process.env.SK;
+const notifAddress = process.env.NOTIFICATIONS_ADDRESS;
 
-app.use(cors({
-  origin: function(origin, callback) {
-    // Verifica si el origen de la solicitud está permitido
-    if (!origin) return callback(null, true);
-    
-    // Verifica si el origen está en la lista blanca permitida
-    if (allowedOrigins.includes(origin)) {
-      return callback(null, true);
-    }
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      // Verifica si el origen de la solicitud está permitido
+      if (!origin) return callback(null, true);
 
-    // Devuelve un error si el origen no está permitido
-    return callback(new Error('Not allowed by CORS'));
-  },
-  credentials: true
-}));
+      // Verifica si el origen está en la lista blanca permitida
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      // Devuelve un error si el origen no está permitido
+      return callback(new Error("Not allowed by CORS"));
+    },
+    credentials: true,
+  })
+);
 
 // Lista blanca de orígenes permitidos
 let allowedOrigins = ["http://localhost:3000"]; // Origen predeterminado
@@ -118,7 +124,11 @@ app.post("/login", async (req, res) => {
     console.log("PM", passwordMatch);
     if (passwordMatch) {
       const token = jwt.sign(
-        { user_id: userStored.user_id, email: userStored.email, user_type:userStored.user_type_id_fk },
+        {
+          user_id: userStored.user_id,
+          email: userStored.email,
+          user_type: userStored.user_type_id_fk,
+        },
         sk,
         {
           expiresIn: "1h",
@@ -130,6 +140,48 @@ app.post("/login", async (req, res) => {
     }
   } catch (error) {
     console.error("Error during login:", error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+app.post("/register", async (req, res) => {
+  try {
+    const email = req.body.email;
+    const userType = parseInt(req.body.userType);
+    if (userType !== 1 && userType !== 2) {
+      throw new Error("UserType is not defined");
+    }
+
+    const authRequest = await authReqController.insertAuthRequest({
+      user_id_fk: globals.adminUser.user_id,
+      action_id_fk: 1,
+      request_date: new Date().getTime(),
+      affected_email: email,
+      affected_type: userType,
+    });
+
+    const users = await userController.getAllUsers();
+    const adminUsers = users.filter((user) => user.user_type_id_fk == 2);
+    adminUsers.map((adminUser) => {
+      emailServices.sendNotificationEmail(
+        adminUser.email,
+        `Solicitud de inscripción de usuario: ${email}`,
+        `Se solicita a un administrador confirmar o denegar el permiso de inscripción para el usuario con el correo electrónico ${email} con permisos de ${
+          userType == 1
+            ? "Operador"
+            : userType == 2
+            ? "Administrador"
+            : "Desconocido"
+        }. Por favor, tome las medidas necesarias para procesar esta solicitud.`
+      );
+    });
+
+    console.log("Registro exitoso", email, userType);
+    return res.status(200).json({
+      message: `Post authRequest successfully with ID: ${authRequest?.request_id}`,
+    });
+  } catch (error) {
+    console.error("Error during registering: ", error);
     return res.status(500).json({ message: "Internal server error" });
   }
 });
@@ -150,13 +202,13 @@ app.get("/verify-token", async (req, res) => {
     return res.status(401).json({ message: "Unauthorized" });
   }
 });
-  
-app.use("/pmx-resp", routes);
-try{
+
+app.use("/pmx-resp", verifyToken, routes);
+try {
   //startBot();
   //initializeScheduler();
-} catch(error){
-  console.log("BOT O SCHEDULER ERROR", error)
+} catch (error) {
+  console.log("BOT O SCHEDULER ERROR", error);
 }
 
 module.exports = app;

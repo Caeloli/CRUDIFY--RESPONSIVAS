@@ -158,7 +158,7 @@ const getDataFromPDF = async (format, file) => {
         .slice(0, 10),
       email: resultsSearch[6],
       account: resultHorizontalSearch[0].split(" ")[0],
-      windows_serverrt: resultHorizontalSearch[1] + resultHorizontalSearch[2],
+      windows_server: resultHorizontalSearch[1] + resultHorizontalSearch[2],
       domain: resultHorizontalSearch[5],
     };
   }

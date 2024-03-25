@@ -4,6 +4,8 @@
   "homepage": ".",
   "private": true,
   "dependencies": {
+    "@emotion/react": "^11.11.4",
+    "@emotion/styled": "^11.11.0",
     "@tanstack/match-sorter-utils": "^8.8.4",
     "@tanstack/react-table": "^8.10.7",
     "@testing-library/jest-dom": "^5.17.0",
@@ -22,6 +24,7 @@
     "react-pdf": "^7.6.0",
     "react-router-dom": "^6.20.1",
     "react-scripts": "5.0.1",
+    "react-select": "^5.8.0",
     "sass": "^1.69.5",
     "styled-components": "^6.1.1",
     "web-vitals": "^2.1.4",

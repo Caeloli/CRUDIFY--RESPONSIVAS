@@ -1,0 +1,18 @@
+@import "../../../../../assets/styles/variables.scss";
+@import "../../../../../assets/styles/mixins.scss";
+
+.exit-cross-button {
+  &:hover {
+    cursor: pointer;
+    color: red;
+    font-weight: bold;
+    transition: all 0.3s ease-in-out;
+  }
+}
+
+.server-form{
+    &:hover{
+        border: solid 0.1rem red;
+        transition: all 0.3s ease-in-out;
+    }
+}

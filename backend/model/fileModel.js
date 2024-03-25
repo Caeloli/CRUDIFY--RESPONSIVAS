@@ -30,6 +30,10 @@ const Files = (sequelize) => {
             len: [1, 200],
           },
       },
+      file_content: {
+        type: DataTypes.BLOB, 
+        allowNull: false
+      },
     },
     {
       tableName: "files", // Specify the table name in your database

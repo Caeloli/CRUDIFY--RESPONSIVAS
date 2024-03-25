@@ -6,6 +6,8 @@ import { Col, Container, Row } from "react-bootstrap";
 import { decodeToken } from "../../../../func/func";
 import { SuccessModalContainer } from "../../../common/Modals/SuccessModal/SuccessModalContainer";
 import { FailModalContainer } from "../../../common/Modals/FailModal/FailModalContainer";
+import { DebouncedInput } from "../../../common/Tables/Filters/Inputs/DebouncedInput";
+import { DebouncedSelect } from "../../../common/Tables/Filters/Inputs/DebouncedSelect";
 
 export function UsersContainer() {
   const [userData, setUserData] = useState(null);
@@ -32,10 +34,10 @@ export function UsersContainer() {
   const handleDelete = async (id) => {
     const result = await deleteUser(id);
     if (!result.error) {
-      setUpdate(prevUpdate => !prevUpdate);
+      setUpdate((prevUpdate) => !prevUpdate);
       setShowSuccessModal(true);
     } else {
-      setFailModalMessage(result.error)
+      setFailModalMessage(result.error);
       setShowFailModal(true);
     }
   };
@@ -65,7 +67,12 @@ export function UsersContainer() {
       {
         accessorFn: (row) => row.user_type_id_fk,
         id: "user_type_id_fk",
-        cell: (info) => info.getValue(),
+        cell: (info) =>
+          info.getValue() == 1
+            ? "Operador"
+            : info.getValue() == 2
+            ? "Administrador"
+            : "Desconocido",
         header: () => <span>Formato</span>,
         footer: (props) => props.column.user_type_id_fk,
       },
@@ -101,6 +108,11 @@ export function UsersContainer() {
           data={userData}
           columns={columns}
           fixedColumns={[]}
+          tableStyles={{ }}
+          filterSelectionObject={{
+            enableColumnFilters: true,
+          }}
+          filter={UserFilter}
         />
         <SuccessModalContainer
           handleClose={handleCloseSuccessModal}
@@ -114,4 +126,87 @@ export function UsersContainer() {
       </Container>
     )
   );
+}
+
+function UserFilter({ column, table }) {
+  const firstValue = table
+    .getPreFilteredRowModel()
+    .flatRows[0]?.getValue(column.id);
+
+  const columnFilterValue = column.getFilterValue();
+
+  const sortedUniqueValues = useMemo(
+    () =>
+      typeof firstValue === "number"
+        ? []
+        : Array.from(column.getFacetedUniqueValues().keys()).sort(),
+    [column.getFacetedUniqueValues()]
+  );
+
+  if (column.id === "user_id") {
+    return (
+      <DebouncedInput
+        type="text"
+        value={columnFilterValue?.[0] ?? ""}
+        onChange={(value) => column.setFilterValue([value, value])}
+        placeholder={`Search... (${column.getFacetedUniqueValues().size})`}
+        className="w-100 border  rounded"
+        list={column.id + "list"}
+        style={{ height: "2.5rem", borderRadius: "0.3rem" }}
+      />
+    );
+  } else if (column.id === "user_type_id_fk") {
+    const options = [
+      { value: 1, label: "Operadores" },
+      { value: 2, label: "Administradores" },
+    ];
+
+    return (
+      <>
+        <DebouncedSelect
+          options={options}
+          isClearable
+          placeholder={`Search... (${column.getFacetedUniqueValues().size})`}
+          onChange={(value) => {
+            column.setFilterValue([value, value]);
+          }}
+          menuPosition="fixed"
+          styles={{
+            control: (baseStyles, state) => ({
+              ...baseStyles,
+              fontWeight: "normal",
+              height: "2.5rem",
+              borderRadius: "0.3rem",
+            }),
+            menuList: (baseStyles, state) => ({
+              ...baseStyles,
+
+              fontWeight: "normal",
+            }),
+          }}
+        />
+      </>
+    );
+  } else if (column.id === "actions") {
+    return null;
+  } else {
+    return (
+      <>
+        <datalist id={column.id + "list"}>
+          {sortedUniqueValues.slice(0, 5000).map((value, index) => (
+            <option value={value} key={index} />
+          ))}
+        </datalist>
+        <DebouncedInput
+          type="text"
+          value={columnFilterValue ?? ""}
+          onChange={(value) => column.setFilterValue(value)}
+          placeholder={`Search... (${column.getFacetedUniqueValues().size})`}
+          className="w-100 border  rounded"
+          list={column.id + "list"}
+          style={{ height: "2.5rem", borderRadius: "0.3rem" }}
+        />
+      </>
+    );
+  }
 }
