@@ -10,7 +10,7 @@ import {
 } from "react-bootstrap";
 import { FaEye, FaEdit, FaTrash } from "react-icons/fa";
 import { FSPTableContainer } from "../../common/Tables/FSPTable/FSPTableContainer";
-import { exportToExcelResponsivesCrud, makeData } from "../../../func/func";
+import { exportToExcelResponsivesCrud, exportToExcelServersF4Panel, makeData } from "../../../func/func";
 import { Link, useNavigate } from "react-router-dom";
 import {
   deleteResponsive,
@@ -103,6 +103,7 @@ function ServersF4TableContainer({
         { name: "resp_id", position: "column-fixed-left" },
         { name: "actions", position: "column-fixed-right" },
       ]}
+      filterSelectionObject={{ enableColumnFilters: true }}
     />
   ) : null;
 }
@@ -183,7 +184,7 @@ export function ServersF4() {
                   <Col className="d-flex justify-content-end">
                     {serverData && (
                       <Button
-                        onClick={() => exportToExcelResponsivesCrud(serverData)}
+                        onClick={() => exportToExcelServersF4Panel(serverData)}
                       >
                         Generar .xlxs
                       </Button>

@@ -1,4 +1,5 @@
 const nodemailer = require("nodemailer");
+require("dotenv").config();
 // Función para enviar correo electrónico
 
 let transporter = undefined;
@@ -10,7 +11,7 @@ async function transportCreate() {
     secure: false,
     auth: {
       user: "pmxresp@outlook.com", // Correo electrónico del remitente
-      pass: "s0port3+Adm1n", // Contraseña del remitente
+      pass: process.env.SECRET_MAIL_PASSWORD ?? "s0port3+Adm1n", // Contraseña del remitente
     },
   });
 }

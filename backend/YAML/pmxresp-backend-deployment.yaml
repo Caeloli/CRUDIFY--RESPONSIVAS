@@ -1,24 +1,22 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: pmrresp-deployment
+  name: pmxresp-backend-deployment
   labels:
-    app: pmrresp-app
+    app: pmxresp-backend
 spec:
-  replicas: 1
+  replicas: 3
   selector:
     matchLabels:
-      app: pmrresp
-      component: pmrresp-app # Corrected label
+      app: pmxresp-backend
   template:
     metadata:
       labels:
-        app: pmrresp
-        component: pmrresp-app # Corrected label
+        app: pmxresp-backend
     spec:
       containers:
-      - name: pmrresp-app
-        image: harbor01.un.pemex.com/spar-qa/pmrresp:latest
+      - name: pmxresp-backend
+        image: harbor01.un.pemex.com/spar-qa/backend-pmxresp:latest
         imagePullPolicy: Always # Changed imagePullPolicy
         ports:
         - containerPort: 80
@@ -29,4 +27,10 @@ spec:
             fieldRef:
               fieldPath: status.podIP
         command: ["npm", "start", "production"]
-
+        resources:
+          limits:
+            cpu: "0.5"
+            memory: "512Mi"
+          requests:
+            cpu: "0.1"
+            memory: "256Mi"

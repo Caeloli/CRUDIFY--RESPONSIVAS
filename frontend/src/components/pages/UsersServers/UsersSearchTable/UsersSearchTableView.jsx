@@ -8,7 +8,12 @@ import {
   FaArrowsUpDown,
 } from "react-icons/fa6";
 import { DebouncedInput } from "../../../common/Tables/Filters/Inputs/DebouncedInput";
-export function UsersSearchTableView({ table, globalFilter, setGlobalFilter, FilterComponent }) {
+export function UsersSearchTableView({
+  table,
+  globalFilter,
+  setGlobalFilter,
+  FilterComponent,
+}) {
   /*useEffect(() => {
     if (table.getState().columnFilters[0]?.id === "fullName") {
       if (table.getState().sorting[0]?.id !== "fullName") {
@@ -38,12 +43,9 @@ export function UsersSearchTableView({ table, globalFilter, setGlobalFilter, Fil
         {table.getHeaderGroups().map((headerGroup) => {
           return (
             <tr key={headerGroup.id}>
-              {/* You can place console.log or comments inside the map function */}
-              {/* This will generate a row for each header group */}
               {headerGroup.headers.map((header) => {
                 return (
                   <th key={header.id} colSpan={header.colSpan}>
-                    {/* Conditional rendering based on header properties */}
                     {header.isPlaceholder ? null : (
                       <div
                         className={

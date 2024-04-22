@@ -27,6 +27,13 @@ export function ResponsiveThirdCard({
         result.after_responsive_id = result.after_resp_id_fk;
         if (isRenewMode) {
           result.start_date = new Date().toISOString().substring(0, 10);
+          result.end_date = new Date(
+            new Date(result.start_date).setFullYear(
+              new Date(result.start_date).getFullYear() + 1
+            )
+          )
+            .toISOString()
+            .split("T")[0];
           result.before_responsive_id = result.resp_id;
         } else {
           result.end_date = new Date(result.end_date)
@@ -51,8 +58,7 @@ export function ResponsiveThirdCard({
 
         setResponsiveData({ ...updatedObject, file: receivedFile });
         //setPreviewFile(receivedFile);
-        if(isRenewMode)
-          setRenewFile(receivedFile);
+        if (isRenewMode) setRenewFile(receivedFile);
         else {
           setPreviewFile(receivedFile);
         }

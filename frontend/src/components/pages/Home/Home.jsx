@@ -25,9 +25,7 @@ export function Home() {
     const fetchResponsiveData = async () => {
       const result = await getAllResponsive();
       console.log("RESULT: ", result);
-      const filteredCardResult = result.filter(
-        (item) => item.state_id_fk != 5
-      )
+      const filteredCardResult = result.filter((item) => item.state_id_fk != 5);
       setCardResponsiveData(filteredCardResult);
       const filteredResponsiveResult = result.filter(
         (item) => item.state_id_fk === 2 || item.state_id_fk === 4
@@ -100,7 +98,7 @@ export function Home() {
           )}
         </Col>
       </Row>
-      <Row>
+      {/*<Row>
         <h4>Responsivas Eliminadas</h4>
         <Col>
           <DisplayTableLogContainer
@@ -108,7 +106,7 @@ export function Home() {
             handleRestoreFile={handleRestoreFile}
           />
         </Col>
-      </Row>
+          </Row>*/}
       <DeleteModalContainer
         showModal={showDeleteModal}
         handleClose={handleCloseDeleteModal}

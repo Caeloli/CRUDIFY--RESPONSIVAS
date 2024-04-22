@@ -48,6 +48,8 @@ const db = {};
   db.files = await require("../../model/fileModel")(sequelize);
   db.servers = await require("../../model/serversModel")(sequelize);
   db.emailsNotify = await require("../../model/emailsNotifyModel")(sequelize);
+  db.notificationData = await require("../../model/notificationDataModel")(sequelize);
+  db.resetToken = await require("../../model/resetTokenModel")(sequelize);
   await postgreSQLInitValuesDB();
 })();
 

@@ -16,7 +16,6 @@ export function UserSelectionContainer({
   const [isExistentUserServer, setIsExistentUserServer] = useState(false);
   const [usersServersDataSelect, setUsersServersDataSelect] = useState(null);
   const [usersServersData, setUsersServersData] = useState(null);
-
   useEffect(() => {
     const fetchUsersData = async () => {
       const data = await getAllUsersServers();
@@ -28,7 +27,7 @@ export function UserSelectionContainer({
       setUsersServersDataSelect(selectDataFormat);
     };
     fetchUsersData();
-  }, []);
+  }, [isSubmit]);
 
   useEffect(() => {
     
@@ -71,9 +70,7 @@ export function UserSelectionContainer({
   };
 
   const handleUserSelect = (id) => {
-    console.log("Hay un cambio", id);
-    if (id) {
-    }
+
     console.log("Hay servers data: ", usersServersData);
     const userServers = usersServersData.find(
       (userServers) => userServers.user_server_id === id

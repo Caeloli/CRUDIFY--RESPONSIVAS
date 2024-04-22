@@ -35,7 +35,10 @@ export function NavbarView({ handleLogOut }) {
             className={"w-sm-50 w-lg-25 navbar-menu"}
             placement="start"
           >
-            <Offcanvas.Header closeButton>
+            <Offcanvas.Header
+              closeButton
+              className="border-bottom text-white"
+            >
               <Offcanvas.Title id={`offcanvasNavbarLabel-expand-false`}>
                 <div className="navbar-menu-logo">
                   <img src="./assets/imgs/pmx_white_logo.png" />

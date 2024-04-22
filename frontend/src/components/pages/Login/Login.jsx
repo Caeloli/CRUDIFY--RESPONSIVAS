@@ -13,7 +13,6 @@ export function Login() {
     console.log("resultado: ", result);
     if (!result.error) {
       localStorage.setItem("jwt", result);
-      navigate("/");
       return true; // Success
     } else {
       actions.setErrors({ password: "Usuario o contraseña incorrectos" });
@@ -58,9 +57,11 @@ export function Login() {
           </Row>
           <Formik
             validationSchema={LoginSchema}
-            onSubmit={async (values, actions) =>
-              await handleSubmit(values, actions)
-            }
+            onSubmit={async (values, actions) => {
+              if (await handleSubmit(values, actions)) {
+                navigate("/");
+              }
+            }}
             initialValues={initialValues}
           >
             {({ handleSubmit, handleChange, values, touched, errors }) => (
@@ -101,7 +102,16 @@ export function Login() {
                 </Row>
                 <Row>
                   <Link to={"/Register"}>
-                    <p style={{textDecoration: "underline"}}>¿No tiene una cuenta? Regístrate</p>
+                    <p style={{ textDecoration: "underline" }}>
+                      ¿No tiene una cuenta? Regístrate
+                    </p>
+                  </Link>
+                </Row>
+                <Row>
+                  <Link to={"/Restore"}>
+                    <p style={{ textDecoration: "underline" }}>
+                      ¿Olvidó su contraseña?
+                    </p>
                   </Link>
                 </Row>
                 <Row>

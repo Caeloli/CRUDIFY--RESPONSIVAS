@@ -1,6 +1,8 @@
 const express = require("express");
 const mail = require("./mails");
 const Queue = require("queue-promise");
+const logger = require("morgan");
+require("dotenv").config();
 require("./bot").startBot();
 const bot = require("./bot");
 const app = express();
@@ -15,40 +17,43 @@ const botQueue = new Queue({
 (async () => {
   try {
     await mail.transportCreate();
-    console.log("Transporte de correo electrónico creado correctamente");
+    console.log("E-Mail Transport created succesfully");
   } catch (error) {
-    console.error("Error al crear el transporte de correo electrónico:", error);
+    console.error("Error while creating the e-mail transport: ", error);
     process.exit(1); // Salir del proceso con un código de error
   }
 })();
 // Middleware para analizar solicitudes JSON
+app.use(logger("dev"));
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 
-// Ruta para manejar solicitudes POST de envío de correo electrónico
+
 app.post("/send-email", async (req, res) => {
   const { to, subject, text } = req.body;
   console.log("TO ", to, "Subject ", subject, "Text ", text);
   try {
     let recipients;
     if (Array.isArray(to)) {
-      // If 'to' is an array, join the email addresses
+      
       recipients = to.join(", ");
     } else {
-      // If 'to' is not an array, use it as is
+      
       recipients = to;
     }
 
-    // Opciones del mensaje de correo electrónico
+    
     await emailQueue.add(async () => {
       console.log("Sending mail to: ", recipients);
 
       await mail.sendEmail(recipients, subject, text);
     });
 
-    res.status(200).send("Correo electrónico enviado correctamente");
+    res.status(200).send("Mail sent succesfully");
   } catch (error) {
-    console.error("Error al enviar el correo electrónico:", error);
-    res.status(500).send("Error al enviar el correo electrónico");
+    console.error("Error while sending mail:", error);
+    res.status(500).send("Error while sending mail");
   }
 });
 
@@ -68,7 +73,17 @@ app.post("/send-tmessage", async (req, res) => {
   }
 });
 
+app.post("/restart-bot", async (req,res) => {
+  try{
+    await bot.restartBot();
+    res.status(200).send("Bot restarted successfully");
+  } catch(error){
+    console.error("Error restarting bot:", error);
+    res.status(500).send("Failed to restart bot");
+  }
+})
+
 // Iniciar el servidor
 app.listen(port, () => {
-  console.log(`Servidor Express.js en ejecución en http://localhost:${port}`);
+  console.log(`Servidor Express.js en ejecución en http://${process.env.PMXRESP_NOTIFICATIONS_SERVICE_SERVICE_HOST}:${port}`);
 });

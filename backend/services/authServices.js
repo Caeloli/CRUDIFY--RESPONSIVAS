@@ -22,7 +22,7 @@ const checkAuthRequest = async (requestId) => {
         break; // No need to continue checking once a non-allowed entry is found
       }
     }
-    console.log("Checking isAllowed");
+    console.log("Checking isAllowed", isAllowed);
     if (isAllowed) {
       // Update Request obtaining insert, update, or delete
       console.log("Updating status");

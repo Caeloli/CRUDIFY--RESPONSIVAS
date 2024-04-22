@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { ResponsivesTableView } from "./ResponsivesTableView";
 import {
   getCoreRowModel,
@@ -35,6 +35,7 @@ export function ResponsivesTableContainer({
   columns,
   pRowSelection,
   pSetRowSelection,
+  visibleData,
 }) {
   const [sorting, setSorting] = useState([]);
   const [rowSelection, setRowSelection] = useState({});
@@ -116,6 +117,7 @@ export function ResponsivesTableContainer({
       header: () => <span>Formato</span>,
     },
   ]);
+
   const table = useReactTable({
     data,
     columns: columnsResponsive,
@@ -124,6 +126,7 @@ export function ResponsivesTableContainer({
     },
     state: {
       columnFilters,
+
       rowSelection: pRowSelection ?? rowSelection,
       globalFilter,
     },
@@ -145,6 +148,43 @@ export function ResponsivesTableContainer({
     debugHeaders: true,
     debugColumns: false,
   });
+
+  useEffect(() => {
+    table.setPageSize(5);
+  }, [table]);
+
+  useEffect(() => {
+    if (visibleData) {
+      const getVisibleRawData = (rows = []) => {
+        if (!rows) {
+          return []; // Handle case where rows is undefined
+        }
+        return rows.map((row) => row.original);
+      };
+
+      if (columnFilters.length === 0) {
+        if (table.getSelectedRowModel().rows.length === 0) {
+          visibleData.current = getVisibleRawData(
+            table.getPreFilteredRowModel().flatRows
+          );
+        } else {
+          visibleData.current = getVisibleRawData(
+            table.getSelectedRowModel().flatRows
+          );
+        }
+      }
+    } else {
+      if (table.getSelectedRowModel().rows.length === 0) {
+        visibleData.current = getVisibleRawData(
+          table.getFilteredRowModel().flatRows
+        );
+      } else {
+        visibleData.current = getVisibleRawData(
+          table.getFilteredSelectedRowModel().flatRows
+        );
+      }
+    }
+  }, [columnFilters, pRowSelection, rowSelection]);
 
   return (
     <ResponsivesTableView
@@ -196,6 +236,7 @@ function ResponsiveTableFilter({ column, table }) {
             console.log("El valor que retorna es: ", value);
             column.setFilterValue(value);
           }}
+          menuPosition="fixed"
           styles={{
             control: (baseStyles, state) => ({
               ...baseStyles,
@@ -244,12 +285,13 @@ function ResponsiveTableFilter({ column, table }) {
           onChange={(value) => {
             column.setFilterValue([value, value]);
           }}
+          menuPosition="fixed"
           styles={{
             control: (baseStyles, state) => ({
               ...baseStyles,
               fontWeight: "normal",
               height: "2.5rem",
-              
+
               borderRadius: "0.3rem",
             }),
             menuList: (baseStyles, state) => ({

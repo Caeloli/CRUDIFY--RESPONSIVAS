@@ -14,7 +14,9 @@ const userController = require("../controller/usersController");
 const authAllowController = require("../controller/authorizationAllowController");
 const authReqController = require("../controller/authorizationRequestController");
 const emailNotifyController = require("../controller/emailsNotifyController");
+const notificationServices = require("../services/axiosServices/notificationServices");
 const auditLogController = require("../controller/auditLogController");
+const notificatioDataController = require("../controller/notificationDataController");
 const authServices = require("../services/authServices");
 const responsiveServices = require("../services/responsiveServices");
 const utils = require("../utils/functions");
@@ -29,7 +31,8 @@ const {
   postgreSQLUpdateResponsiveNotficationsState,
 } = require("../services/dbServices");
 const globals = require("../config/globalVariables");
-const { error } = require("console");
+const { error, log } = require("console");
+const { default: axios } = require("axios");
 
 //const responsiveFileModel = require("../model/responsivefile.model")
 const salt = process.env.SALT;
@@ -57,15 +60,6 @@ const upload = multer({ storage: memoryStorage });
  * UserTypes
  */
 
-router.get("/active", async (req, res) => {
-  try {
-    return res
-      .status(200)
-      .json({ message: `Active ${process.env.KUBERNETES_SERVICE_HOST}` });
-  } catch (error) {
-    return res.status(500).json({ message: "Internal server error" });
-  }
-});
 
 router.get("/usertype", async (req, res) => {
   try {
@@ -113,6 +107,56 @@ router.get("/users", async (req, res) => {
       .json({ message: "Internal server error with users" });
   }
 });
+
+/*router.put("/users/restore", async (req, res) => {
+  try {
+    const { email } = req.body;
+    const user = await userController.getUserByEmail(email);
+    if (user) {
+      const newPassword = generatePassword.generate({
+        length: Math.floor(Math.random() * 11) + 9,
+        numbers: true,
+        symbols: true,
+        uppercase: true,
+        lowercase: true,
+        strict: true,
+        excludeSimilarCharacters: true,
+      });
+      const hashedPassword = await bcrypt.hash(newPassword, salt);
+      const updatedUser = await userController.updateUser(user.user_id, {
+        pswrd: hashedPassword,
+      });
+      if (updatedUser) {
+        const backendNotification = "http://localhost:10333";
+        axios
+          .post(`${backendNotification}/send-email`, {
+            to: updatedUser.email,
+            subject: "Recuperación y Actualización de Contraseña",
+            text: `Su contraseña para el correo electrónico ${updatedUser.email} ha sido actualizada a ${updatedUser.pswrd}. Por favor, verifique sus credenciales.`,
+          })
+          .then(() => {
+            res.status(200).json({ message: "Password updated successfully" });
+          })
+          .catch(async (error) => {
+            await userController.updateUser(user.user_id, {
+              pswrd: user.pswrd,
+            });
+            console.error("Error sending email: ", error);
+            res
+              .status(500)
+              .json({ message: "Failed to send email notification" });
+          });
+      }
+    } else {
+      res.status(404).json({ message: "User not found" });
+    }
+  } catch (error) {
+    console.error("Error restoring user:", error);
+    res
+      .status(500)
+      .json({ message: "Internal server error with restoring user" });
+  }
+}); */
 
 router.delete("/users/:id", async (req, res) => {
   try {
@@ -182,7 +226,7 @@ router.put("/auditlog", async (req, res) => {
   }
 });
 
-router.post("/auditlog/file-restore/:id", async (req, res) => {
+/*router.post("/auditlog/file-restore/:id", async (req, res) => {
   try {
     const id = req.params.id;
     const auditLog = await auditLogController.getAuditLog(id);
@@ -207,6 +251,7 @@ router.post("/auditlog/file-restore/:id", async (req, res) => {
       .json({ message: "Internal server error while restoring file" });
   }
 });
+*/
 /**
  * Responsive Files
  */
@@ -239,7 +284,6 @@ router.post("/responsive-file", upload.single("file"), async (req, res) => {
     const file = req.file;
     const data = JSON.parse(req.body.data);
     const user_id = req.user_id;
-    console.log("La DATA: ", data);
     if (!!data.after_responsive_id || !!data.before_responsive_id) {
       if (data.after_responsive_id) {
         if (
@@ -266,6 +310,7 @@ router.post("/responsive-file", upload.single("file"), async (req, res) => {
     }
 
     let userServersResult;
+    //Data is new user 1, new user is going to be inserted
     if (data.is_new_user === 1) {
       userServersResult = await userServerController.insertUserServer({
         user_server_username: data.user_name,
@@ -275,7 +320,9 @@ router.post("/responsive-file", upload.single("file"), async (req, res) => {
         immediately_chief: data.immediately_chief,
         immediately_chief_email: data.email_immediately_chief,
       });
-    } else if (data.is_new_user === 2) {
+    }
+    //Data is new user 2, previous user is gonna be retrieve
+    else if (data.is_new_user === 2) {
       userServersResult = await userServerController.getUserServer(
         data.user_name
       );
@@ -410,6 +457,15 @@ router.put("/responsive-file/:id", upload.single("file"), async (req, res) => {
         );
         return res.status(200).json({
           message: `Responsive cancelled with ID: ${result.resp_id}`,
+          //${responsiveFileStored.resp_id}
+        });
+      } else if(data.state_id_fk === 4){
+        const result = await responsiveFileController.updateResponsiveFile(
+          responsiveResult.resp_id,
+          data
+        );
+        return res.status(200).json({
+          message: `Responsive updated to notified with ID: ${result.resp_id}`,
           //${responsiveFileStored.resp_id}
         });
       }
@@ -889,12 +945,13 @@ router.post(
   }
 );
 
-/*router.get("/notification/bot", async (req, res) => {
+router.get("/notification/bot", async (req, res) => {
   try {
+    const notifData = await notificatioDataController.getNotificationData(1);
     return res.status(200).json({
-      api: process.env.TELEGRAM_BOT_TOKEN,
-      group: process.env.TELEGRAM_CHAT_GROUP_ID,
-      time: process.env.NOTIFICATION_TIME,
+      bot_id: notifData.bot_id,
+      chat_group_id: notifData.chat_group_id,
+      notification_time: notifData.notification_time,
     });
   } catch (error) {
     console.log("Error", error);
@@ -907,34 +964,21 @@ router.post(
 router.put("/notification/bot", async (req, res) => {
   try {
     const data = req.body;
-    if (data.api) {
-      updateTelegramBotToken(data.api);
-      startBot();
-
+    const notifData = await notificatioDataController.updateNotificationData(
+      1,
+      data
+    );
+    if (!!data.bot_id && !!notifData) {
+      notificationServices.restartBotTelegram();
+      //const backendNotification = "http://localhost:10333";
+      //axios.post(`${backendNotification}/restart-bot`);
     }
-    if (data.group) {
-      sendNotification("Mensaje de Prueba. Tu grupo fue registrado", data.group)
-        .then(() => {
-          updateTelegramChatId(data.group);
-          res
-            .status(200)
-            .json({ message: `Variable ${data} actualizado con éxito` });
-        })
-        .catch((error) => {
-          console.log("Error sending message to Notification Bot:", error);
-          res.status(500).json({
-            message: "Internal error while sending message to Notification Bot",
-          });
-        });
-    } else {
-      if (data.time) {
-        updateNotificationTime(data.time);
-        initializeScheduler();
-      }
-      res
-        .status(200)
-        .json({ message: `Variable ${data} actualizado con éxito` });
+    if (!!data.notification_time && !!notifData) {
+      notificationServices.restartScheduler();
+      //const backendScheduler = "http://localhost:10335";
+      //axios.post(`${backendScheduler}/restart-scheduler`);
     }
+    res.status(200).json({ message: `Variable ${data} actualizado con éxito` });
   } catch (error) {
     console.log("Error", error);
     res
@@ -943,10 +987,24 @@ router.put("/notification/bot", async (req, res) => {
   }
 });
 
-*/
-router.use(
+/*router.get("/file/:id", async(req, res) => {
+  try{
+    const id = req.params.id;
+    const file = await fileController.getFileByRespIDFK(id);
+    file.file_unique_name;
+    file.file_content;
+  } catch(error){
+    console.log("Error", error);
+    res
+      .status(500)
+      .json({ message: "Internal server error with Files" });
+  }
+});
+
+/*router.use(
   "/files",
   express.static(path.join(__dirname, "../uploads/responsive"))
-);
+); 
+*/
 
 module.exports = router;

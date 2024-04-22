@@ -7,6 +7,7 @@ import { SuccessModalContainer } from "../../../common/Modals/SuccessModal/Succe
 import { RxCross1 } from "react-icons/rx";
 import { UserSelectionContainer } from "../UserSelection/UserSelectionContainer";
 import { ModalResponsiveSelectContainer } from "../ModalResponsiveSelect/ModalResponsiveSelectContainer";
+import { useNavigate } from "react-router-dom";
 export function ResponsiveThirdFormView({
   schema,
   initialValues,
@@ -31,6 +32,8 @@ export function ResponsiveThirdFormView({
   const [showFileModal, setShowFileModal] = useState();
   const [isSubmit, setIsSubmit] = useState(false);
   const [servers, setServers] = useState([]);
+  console.log("INIT: ", initialValues);
+  const navigate = useNavigate();
 
   const handleShowFileModal = () => {
     setShowFileModal(true);
@@ -54,6 +57,7 @@ export function ResponsiveThirdFormView({
 
   const handleCloseSuccessModal = () => {
     setShowSucessModal(false);
+    navigate("/Files");
   };
 
   const handleShowResponsiveNextSelectModal = () => {
@@ -138,7 +142,22 @@ export function ResponsiveThirdFormView({
                 )}
                 {isReadMode && (
                   <h3>
-                    Responsiva {initialValues.resp_id} F{isThird ? 3 : 4}
+                    Responsiva {initialValues.resp_id} F{isThird ? 3 : 4} -
+                    <span style={{ fontStyle: "italic", fontSize: "1.4rem" }}>
+                      {initialValues.state_id_fk === 1
+                        ? "Activa"
+                        : initialValues.state_id_fk === 2
+                        ? "Notificar"
+                        : initialValues.state_id_fk === 3
+                        ? "Expirado"
+                        : initialValues.state_id_fk === 4
+                        ? "Notificado"
+                        : initialValues.state_id_fk === 5
+                        ? "Cancelado"
+                        : initialValues.state_id_fk === 6
+                        ? "Renovada"
+                        : "Se desconoce"}
+                    </span>
                   </h3>
                 )}
                 {isRenewMode && (
@@ -603,15 +622,15 @@ export function ResponsiveThirdFormView({
                     handleChange(e);
                     setFieldValue(
                       "end_date",
-                      values.start_date
+                      e.target.value
                         ? new Date(
-                            new Date(values.start_date).setFullYear(
-                              new Date(values.start_date).getFullYear() + 1
+                            new Date(e.target.value).setFullYear(
+                              new Date(e.target.value).getFullYear() + 1
                             )
                           )
                             .toISOString()
                             .split("T")[0]
-                        : values.start_date
+                        : e.target.value
                     );
                   }}
                   isInvalid={touched.start_date && !!errors.start_date}
@@ -630,19 +649,9 @@ export function ResponsiveThirdFormView({
                   type="date"
                   placeholder="Fecha Inicio"
                   name="end_date"
-                  value={
-                    values.start_date
-                      ? new Date(
-                          new Date(values.start_date).setFullYear(
-                            new Date(values.start_date).getFullYear() + 1
-                          )
-                        )
-                          .toISOString()
-                          .split("T")[0]
-                      : values.start_date
-                  }
+                  value={values.end_date}
                   disabled={isSubmit || isReadMode}
-                  onChange={handleChange}
+                  //onChange={handleChange}
                   isInvalid={touched.end_date && !!errors.end_date}
                 />
                 <Form.Control.Feedback type="invalid">
@@ -680,6 +689,7 @@ export function ResponsiveThirdFormView({
                   <Form.Label>File</Form.Label>
                   <Form.Control
                     type="file"
+                    accept=".pdf"
                     required
                     name="file"
                     disabled={isSubmit || isReadMode}
@@ -793,6 +803,18 @@ export function ResponsiveThirdFormView({
                       </Button>
                     )}
                   </ButtonGroup>
+                </Form.Group>
+              </Row>
+            )}
+            {initialValues.state_id_fk === 5 && (
+              <Row>
+                <Form.Label>Motivo de Cancelación</Form.Label>
+                <Form.Group>
+                  <Form.Control
+                    as="textarea"
+                    disabled
+                    value={initialValues.comment}
+                  />
                 </Form.Group>
               </Row>
             )}

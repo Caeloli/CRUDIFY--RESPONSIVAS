@@ -4,7 +4,7 @@ metadata:
   name: pmrresp-app-service
 spec:
   ports:
-  - port: 30203 # Puerto del servicio
+  - port: 80 # Puerto del servicio
     targetPort: 80 # Puerto en el que escucha tu aplicación Node.js
     protocol: TCP
   selector:

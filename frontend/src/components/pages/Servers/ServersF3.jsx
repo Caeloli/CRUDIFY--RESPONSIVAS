@@ -10,7 +10,11 @@ import {
 } from "react-bootstrap";
 import { FaEye, FaEdit, FaTrash } from "react-icons/fa";
 import { FSPTableContainer } from "../../common/Tables/FSPTable/FSPTableContainer";
-import { exportToExcelResponsivesCrud, makeData } from "../../../func/func";
+import {
+  exportToExcelResponsivesCrud,
+  exportToExcelServersF3Panel,
+  makeData,
+} from "../../../func/func";
 import { Link, useNavigate } from "react-router-dom";
 import {
   deleteResponsive,
@@ -31,24 +35,24 @@ function ServersF3TableContainer({
 
   const columns = useMemo(
     () => [
-        {
-            accessorFn: (row) => row.hostname,
-            id: "hostname",
-            cell: (info) => info.getValue(),
-            header: () => <span>Server</span>,
-          },
-          {
-            accessorFn: (row) => row.domain_server,
-            id: "domain_server",
-            cell: (info) => info.getValue(),
-            header: () => <span>Dominio</span>,
-          },
-          {
-            accessorFn: (row) => row.ip_address,
-            id: "ip_address",
-            cell: (info) => info.getValue(),
-            header: () => <span>Dirección IP</span>,
-          },
+      {
+        accessorFn: (row) => row.hostname,
+        id: "hostname",
+        cell: (info) => info.getValue(),
+        header: () => <span>Server</span>,
+      },
+      {
+        accessorFn: (row) => row.domain_server,
+        id: "domain_server",
+        cell: (info) => info.getValue(),
+        header: () => <span>Dominio</span>,
+      },
+      {
+        accessorFn: (row) => row.ip_address,
+        id: "ip_address",
+        cell: (info) => info.getValue(),
+        header: () => <span>Dirección IP</span>,
+      },
       /*{
         accessorFn: (row) => row.state_id_fk,
         id: "state_id_fk",
@@ -97,6 +101,7 @@ function ServersF3TableContainer({
         { name: "resp_id", position: "column-fixed-left" },
         { name: "actions", position: "column-fixed-right" },
       ]}
+      filterSelectionObject={{ enableColumnFilters: true }}
     />
   ) : null;
 }
@@ -177,7 +182,7 @@ export function ServersF3() {
                   <Col className="d-flex justify-content-end">
                     {serverData && (
                       <Button
-                        onClick={() => exportToExcelResponsivesCrud(serverData)}
+                        onClick={() => exportToExcelServersF3Panel(serverData)}
                       >
                         Generar .xlxs
                       </Button>

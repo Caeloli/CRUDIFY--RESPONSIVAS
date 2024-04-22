@@ -2,11 +2,12 @@
 -- Drop tables with foreign key relationships first
 DROP TABLE IF EXISTS authorization_allow;
 DROP TABLE IF EXISTS authorization_request;
+DROP TABLE IF EXISTS reset_tokens;
 DROP TABLE IF EXISTS audit_log;
 DROP TABLE IF EXISTS files;
 DROP TABLE IF EXISTS servers;
 DROP TABLE IF EXISTS responsive_files;
-
+DROP TABLE IF EXISTS notification_data;
 -- Drop tables with primary key relationships next
 DROP TABLE IF EXISTS users_servers;
 DROP TABLE IF EXISTS actions;
@@ -33,7 +34,7 @@ CREATE TABLE
     users_servers(
         user_server_id SERIAL PRIMARY KEY,
         user_server_username VARCHAR(100) NOT NULL,
-        email VARCHAR(60) NOT NULL
+        email VARCHAR(60) NOT NULL,
         token VARCHAR(30) NOT NULL,
         phone VARCHAR(30),
         immediately_chief VARCHAR(50),
@@ -65,11 +66,12 @@ CREATE TABLE
         user_id_fk INT REFERENCES users(user_id) NOT NULL,
         user_servers_id_fk INT REFERENCES users_servers(user_server_id) NOT NULL,
         before_resp_id_fk INT REFERENCES responsive_files(resp_id),
-        after_resp_id_fk INT REFERENCES responsive_files(resp_id);
+        after_resp_id_fk INT REFERENCES responsive_files(resp_id),
         state_id_fk INT REFERENCES states(state_id),
         remedy VARCHAR(30) NOT NULL,
         start_date TIMESTAMP NOT NULL,
         end_date TIMESTAMP NOT NULL,
+        comment TEXT NULL,
         file_format INT NOT NULL
     );
 
@@ -119,10 +121,32 @@ CREATE TABLE
 CREATE TABLE servers (
     server_id SERIAL PRIMARY KEY,
     responsive_file_id_fk INT REFERENCES responsive_files(resp_id) ON DELETE CASCADE,
-    server_name VARCHAR(60) CHECK (LENGTH(server_name) BETWEEN 1 AND 60),
-    account VARCHAR(60) CHECK (LENGTH(account) BETWEEN 1 AND 60),
-    domain VARCHAR(60) CHECK (LENGTH(domain) BETWEEN 1 AND 60)
+    brand VARCHAR(100) NULL,
+    model VARCHAR(100) NULL,
+    serial_number VARCHAR(100) NULL,
+    location VARCHAR(100) NULL,
+    hostname VARCHAR(100) NULL,
+    ip_address VARCHAR(100) NULL,
+    domain_server VARCHAR(60) NULL
 );
+
+CREATE TABLE IF NOT EXISTS notification_data (
+    notif_data_id SERIAL PRIMARY KEY,
+    bot_id VARCHAR(100) NOT NULL,
+    chat_group_id VARCHAR(100) NOT NULL,
+    notification_time TIME NOT NULL,
+    CONSTRAINT unique_bot_id UNIQUE (bot_id)
+);
+
+ CREATE TABLE IF NOT EXISTS reset_tokens (
+    reset_token_id SERIAL PRIMARY KEY,
+    user_id_fk INT REFERENCES users(user_id) NOT NULL,
+    reset_token VARCHAR(30) NOT NULL,
+    reset_token_date TIMESTAMP NOT NULL,
+    reset_token_status BOOLEAN NOT NULL
+ );
+ 
+
 
 INSERT INTO
     actions (description)

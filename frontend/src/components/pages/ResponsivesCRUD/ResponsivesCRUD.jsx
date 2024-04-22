@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   Button,
   ButtonGroup,
@@ -34,6 +34,7 @@ function ResponsiveTableContainer({
   handleCancel,
   handleRestore,
   responsiveData,
+  visibleData,
 }) {
   //const [data, setData] = useState(() => makeData(10));
   //const refreshData = () => setData(() => makeData(10));
@@ -63,7 +64,7 @@ function ResponsiveTableContainer({
             cell: (info) => {
               const state_id = info.getValue();
               return state_id === 1
-                ? "Active"
+                ? "Activa"
                 : state_id === 2
                 ? "Notificar"
                 : state_id === 3
@@ -237,6 +238,7 @@ function ResponsiveTableContainer({
       filterSelectionObject={{
         enableColumnFilters: true,
       }}
+      visibleData={visibleData}
     />
   ) : null;
 }
@@ -400,14 +402,16 @@ export function ResponsivesCRUD() {
   const [showFailModal, setShowFailModal] = useState(false);
   const [responsiveData, setResponsiveData] = useState(null);
   const [update, setUpdate] = useState(false);
+  const downloadableData = useRef([]);
+
   const navigate = useNavigate();
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const responsives = await getAllResponsive();
-
         setResponsiveData(responsives);
+        //downloadableData.current = responsives;
       } catch (error) {
         console.error("Error fetching responsives: ", error);
       }
@@ -487,6 +491,11 @@ export function ResponsivesCRUD() {
     setShowFailModal(false);
   };
 
+  const handleGenerateXLXS = () => {
+    console.log("Data visible: ", downloadableData)
+    return exportToExcelResponsivesCrud(downloadableData.current)
+  }
+
   return (
     <>
       <Container>
@@ -499,7 +508,7 @@ export function ResponsivesCRUD() {
               <Col className="responsive-crud__btn">
                 {responsiveData && (
                   <Button
-                    onClick={() => exportToExcelResponsivesCrud(responsiveData)}
+                    onClick={() => handleGenerateXLXS()}
                   >
                     Generar .xlxs
                   </Button>
@@ -522,6 +531,7 @@ export function ResponsivesCRUD() {
             handleEdit={handleEdit}
             handleView={handleView}
             handleRestore={handleRestore}
+            visibleData={downloadableData}
             responsiveData={responsiveData}
           />
         </Row>

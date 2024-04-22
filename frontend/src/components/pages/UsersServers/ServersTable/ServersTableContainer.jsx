@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { ServersTableView } from "./ServersTableView";
 import {
   getCoreRowModel,
@@ -145,6 +145,11 @@ export function ServersTableContainer({
     debugHeaders: true,
     debugColumns: false,
   });
+
+  useEffect(() => {
+    table.setPageSize(5);
+  }, [table]);
+
 
   return (
     <ServersTableView

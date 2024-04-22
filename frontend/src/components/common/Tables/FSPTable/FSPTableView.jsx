@@ -291,7 +291,8 @@ function Filter({ column, table }) {
               ? `(${column.getFacetedMinMaxValues()?.[0]})`
               : ""
           }`}
-          className="w-24 border shadow rounded"
+          style={{ height: "2.5rem", borderRadius: "0.3rem" }}
+          className="w-100 border  rounded"
         />
         <DebouncedInput
           type="number"
@@ -306,7 +307,8 @@ function Filter({ column, table }) {
               ? `(${column.getFacetedMinMaxValues()?.[1]})`
               : ""
           }`}
-          className="w-24 border shadow rounded"
+          style={{ height: "2.5rem", borderRadius: "0.3rem" }}
+          className="w-100 border  rounded"
         />
       </div>
       <div className="h-1" />
@@ -323,7 +325,8 @@ function Filter({ column, table }) {
         value={columnFilterValue ?? ""}
         onChange={(value) => column.setFilterValue(value)}
         placeholder={`Search... (${column.getFacetedUniqueValues().size})`}
-        className="w-36 border shadow rounded"
+        className="w-100 border  rounded"
+        style={{ height: "2.5rem", borderRadius: "0.3rem" }}
         list={column.id + "list"}
       />
       <div className="h-1" />

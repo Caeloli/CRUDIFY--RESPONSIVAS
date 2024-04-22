@@ -42,8 +42,8 @@ export function Notifications() {
         setBotData(result);
       } catch (error) {
         setBotData({
-          api: "",
-          group: "",
+          bot_id: "",
+          chat_group_id: "",
           time: "00:00",
         });
       }
@@ -53,12 +53,12 @@ export function Notifications() {
   }, [update]);
 
   const APISchema = yup.object().shape({
-    api: yup.string().required("Se requiere un API Token"),
+    bot_id: yup.string().required("Se requiere un API Token"),
   });
 
   const handleAPIBotSubmit = async (values, actions) => {
 
-    if (await verifyTelegramToken(values.api)) {
+    if (await verifyTelegramToken(values.bot_id)) {
       //console.log("El bot sí existe");
       const result = await putNotificationBot(values);
       if (!result.error) {
@@ -68,13 +68,13 @@ export function Notifications() {
         return false; // Error
       }
     } else {
-      actions.setErrors({ api: "El Token del bot no es válido" });
+      actions.setErrors({ bot_id: "El Token del bot no es válido" });
       return false;
     }
   };
 
   const BotGroupSchema = yup.object().shape({
-    group: yup.string().required("Se requiere grupo"),
+    chat_group_id: yup.string().required("Se requiere grupo"),
   });
 
   const handleGroupIDSubmit = async (values, actions) => {
@@ -82,14 +82,14 @@ export function Notifications() {
     if (!result.error) {
       return true; // Success
     } else {
-      actions.setErrors({ group: "El Grupo del bot no es válido" });
+      actions.setErrors({ chat_group_id: "El Grupo del bot no es válido" });
       console.log("Error, envio falso");
       return false; // Error
     }
   };
 
   const TimeSchema = yup.object().shape({
-    time: yup
+    notification_time: yup
       .string()
       .required("Time is required."),
   });
@@ -104,17 +104,7 @@ export function Notifications() {
     }
   };
 
-  const handleDelete = async (id) => {
-    const result = await deleteEmailNotify(id);
-    if (!result.error) {
-      const value = update;
-      setUpdate(!value);
-      setShowSuccessModal(true);
-    } else {
-      setShowFailModal(true);
-    }
-  };
-
+ 
   const handleCloseFailModal = () => {
     setShowFailModal(false);
   };
@@ -156,7 +146,7 @@ export function Notifications() {
                   }
                   await setIsSubmitToken(false);
                 }}
-                initialValues={{ api: botData.api }}
+                initialValues={{ bot_id: botData.bot_id }}
               >
                 {({ handleSubmit, handleChange, values, touched, errors }) => (
                   <Form noValidate onSubmit={handleSubmit}>
@@ -168,20 +158,20 @@ export function Notifications() {
                       <InputGroup>
                         <FormControl
                           type="text"
-                          placeholder="API URL"
+                          placeholder="Código API"
                           aria-label=""
-                          name="api"
+                          name="bot_id"
                           aria-describedby=""
-                          value={values.api}
+                          value={values.bot_id}
                           disabled={isSubmitToken}
                           onChange={handleChange}
-                          isInvalid={touched.api && !!errors.api}
+                          isInvalid={touched.bot_id && !!errors.bot_id}
                         />
                         <Button type="submit" disabled={isSubmitToken}>
                           Subir
                         </Button>
                         <Form.Control.Feedback type="invalid">
-                          {errors.api}
+                          {errors.bot_id}
                         </Form.Control.Feedback>
                       </InputGroup>
                     </Form.Group>
@@ -215,7 +205,7 @@ export function Notifications() {
                   }
                   await setIsSubmitGroup(false);
                 }}
-                initialValues={{ group: botData.group }}
+                initialValues={{ chat_group_id: botData.chat_group_id }}
               >
                 {({ handleSubmit, handleChange, values, touched, errors }) => (
                   <Form noValidate onSubmit={handleSubmit}>
@@ -225,18 +215,18 @@ export function Notifications() {
                           type="group"
                           placeholder="Grupo ID"
                           aria-label=""
-                          name="group"
+                          name="chat_group_id"
                           aria-describedby=""
-                          value={values.group}
+                          value={values.chat_group_id}
                           disabled={isSubmitGroup}
                           onChange={handleChange}
-                          isInvalid={touched.group && !!errors.group}
+                          isInvalid={touched.chat_group_id && !!errors.chat_group_id}
                         />
                         <Button type="submit" disabled={isSubmitGroup}>
                           Subir
                         </Button>
                         <Form.Control.Feedback type="invalid">
-                          {errors.group}
+                          {errors.chat_group_id}
                         </Form.Control.Feedback>
                       </InputGroup>
                     </FormGroup>
@@ -270,7 +260,7 @@ export function Notifications() {
                   }
                   await setIsSubmitTime(false);
                 }}
-                initialValues={{ time: botData.time }}
+                initialValues={{ notification_time: botData.notification_time }}
               >
                 {({ handleSubmit, handleChange, values, touched, errors }) => (
                   <Form noValidate onSubmit={handleSubmit}>
@@ -280,18 +270,18 @@ export function Notifications() {
                           type="time"
                           aria-label=""
                           aria-describedby=""
-                          name="time"
-                          value={values.time}
+                          name="notification_time"
+                          value={values.notification_time}
                           disabled={isSubmitTime}
                           onChange={handleChange}
-                          isInvalid={touched.time && !!errors.time}
+                          isInvalid={touched.notification_time && !!errors.notification_time}
                         />
                         <Button type="submit" disabled={isSubmitTime}>
                           Subir
                         </Button>
                       </InputGroup>
                       <FormControl.Feedback type="invalid">
-                        {errors.time}
+                        {errors.notification_time}
                       </FormControl.Feedback>
                     </FormGroup>
                   </Form>

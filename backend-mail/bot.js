@@ -4,42 +4,10 @@ const { default: axios } = require("axios");
 require("dotenv").config();
 
 const backendPostgresql = "http://localhost";
+//const backendPostgresql = "http://pmxresp-backend-service"; //"http://localhost";
 const backendDir = "/pmx-resp";
 const EMAIL_INPUT = 0;
 let bot;
-/*const emailDataWizard = new Scenes.WizardScene(
-  "EMAIL_DATA_WIZARD_SCENE_ID",
-  // Step 1
-  async (ctx) => {
-    await ctx.reply(
-      "Estás a punto de registrar una cuenta para acceder al sistema de responsivas. Favor de ingresar un correo electrónico válido:"
-    );
-    ctx.wizard.state.email = {}
-    return ctx.wizard.next();
-  },
-  // Step 2
-  async (ctx) => {
-    const email = ctx.message.text;
-
-    // Perform validation
-    const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-    if (!emailPattern.test(email)) {
-      await ctx.reply(
-        "Formato de correo electrónico inválido. Por favor ingrese un correo electrónico válido."
-      );
-      return ctx.wizard.back(); // Go back to the previous step
-    }
-
-    // Save email to the database
-    // Example: await pool.query('INSERT INTO users (email) VALUES ($1)', [email]);
-
-    await ctx.reply(
-      `Gracias, tu correo electrónico: ${email} fue registrado exitósamente. Esperando confirmación del administrador`
-    );
-    return ctx.scene.leave(); // End the conversation
-  }
-);
-*/
 
 const emailDataWizard = new Scenes.WizardScene(
   "EMAIL_DATA_WIZARD_SCENE_ID",
@@ -96,12 +64,12 @@ const emailDataWizard = new Scenes.WizardScene(
       return ctx.scene.leave();
     }
     const loginResponse = await axios.post(`${backendPostgresql}/login`, {
-      user: "admin@admin.com",
+      user: "pmxresp@outlook.com",
       password: "s0port3+Adm1n",
     });
     const token = loginResponse.data;
     const authRequest = await axios.post(
-      `${backendPostgresql}${backendDir}/authrequest`,
+      `${backendPostgresql}${backendDir}/authrequest/register`,
       {
         affected_email: email,
         affected_type: type_of_user,
@@ -158,10 +126,24 @@ async function cancel(ctx) {
 }
 
 async function startBot() {
-  const stage = new Scenes.Stage([emailDataWizard]);
-  const TOKEN = process.env.TELEGRAM_BOT_TOKEN;
   try {
-    bot = new Telegraf(TOKEN);
+    const stage = new Scenes.Stage([emailDataWizard]);
+    const loginResponse = await axios.post(`${backendPostgresql}/login`, {
+      user: "pmxresp@outlook.com",
+      password: "s0port3+Adm1n",
+    });
+    const token = loginResponse.data;
+    const notifData = await axios.get(
+      `${backendPostgresql}${backendDir}/notification/bot`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    const tokenBot = notifData.data.bot_id;
+
+    bot = new Telegraf(tokenBot);
     bot.use(session());
     bot.use(stage.middleware());
     bot.command("start", start);
@@ -170,6 +152,7 @@ async function startBot() {
       ctx.scene.enter("EMAIL_DATA_WIZARD_SCENE_ID")
     );
     bot.launch();
+    console.log("Bot started succesfully")
   } catch (error) {
     console.error("Error launching the bot:", error);
     // Handle the error and attempt to restart the bot
@@ -177,7 +160,19 @@ async function startBot() {
   }
 }
 
+function restartBot(delay = 3000) {
+  if (!!bot) {
+    console.log("Stopping the bot...");
+    bot.stop();
+    console.log(`Bot stopped. Restarting in ${delay / 1000} seconds...`);
+    setTimeout(startBot, delay);
+  } else {
+    console.log("Nothing to restart...");
+  }
+}
+
 module.exports = {
   startBot,
   sendNotification,
+  restartBot,
 };

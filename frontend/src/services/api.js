@@ -1,16 +1,18 @@
 import axios from "axios";
 
-let apiBase = "http://localhost";
-//let apiBase = "http://172.19.70.21:30203"; // Default API base URL
+const apiBase = "http://localhost"//"http://pmxresp-backend-service";//process.env.PMXRESP_BACKEND_SERVICE_SERVICE_HOST ?? "http://pmxresp-backend-service.ns-gsd-spar-qa01.svc.cluster.local" ?? "http://localhost";
 
+//let apiBase = "http://172.19.70.24"; // Default API base URL
+console.log("apiBase: ", apiBase)
 // Set the API base URL to the Kubernetes service host if available
-const kubernetesServiceHost = process.env.KUBERNETES_SERVICE_HOST;
-if (kubernetesServiceHost) {
-  apiBase = `http://${kubernetesServiceHost}`;
-}
-const apiURL = `${apiBase}/pmx-resp`;
-const bearerToken = localStorage.getItem("jwt");
 
+const apiURL = `${apiBase}/pmx-resp`;
+
+function test () {
+  console.log("PRUEBA: ")
+  axios.get(`${apiBase}/active`).then(response => console.log("la data: ", response.data)).catch(err => console.log("ERROR: ", err));
+}
+test();
 /**
  * Responsive
  */
@@ -20,7 +22,7 @@ export const postResponsive = (responsiveData) => {
   return axios
     .post(`${apiURL}${apiResponsiveURI}`, responsiveData, {
       headers: {
-        Authorization: `Bearer ${bearerToken}`,
+        Authorization: `Bearer ${localStorage.getItem("jwt")}`,
         "content-type": "multipart/form-data",
       },
     })
@@ -32,8 +34,13 @@ export const postResponsive = (responsiveData) => {
       }
     })
     .catch((error) => {
-      console.log("Error", error);
-      return { error: "Network error" };
+      if (error.response.status === 401) {
+        localStorage.removeItem("jwt");
+        window.location.href = "/Login"; // Redirect to login page
+      } else {
+        console.log("Error", error);
+        return { error: "Network error" };
+      }
     });
 };
 
@@ -41,7 +48,7 @@ export const putResponsive = (responsiveID, newResponsiveData) => {
   return axios
     .put(`${apiURL}${apiResponsiveURI}/${responsiveID}`, newResponsiveData, {
       headers: {
-        Authorization: `Bearer ${bearerToken}`,
+        Authorization: `Bearer ${localStorage.getItem("jwt")}`,
         "content-type": "multipart/form-data",
       },
     })
@@ -53,8 +60,13 @@ export const putResponsive = (responsiveID, newResponsiveData) => {
       }
     })
     .catch((error) => {
-      console.log("Error");
-      return { error: "Request error" };
+      if (error.response.status === 401) {
+        localStorage.removeItem("jwt");
+        window.location.href = "/Login"; // Redirect to login page
+      } else {
+        console.log("Error", error);
+        return { error: "Request error" };
+      }
     });
 };
 
@@ -62,7 +74,7 @@ export const getResponsive = (responsiveID) => {
   return axios
     .get(`${apiURL}${apiResponsiveURI}/${responsiveID}`, {
       headers: {
-        Authorization: `Bearer ${bearerToken}`,
+        Authorization: `Bearer ${localStorage.getItem("jwt")}`,
       },
     })
     .then((response) => {
@@ -73,8 +85,13 @@ export const getResponsive = (responsiveID) => {
       }
     })
     .catch((error) => {
-      console.log(error);
-      return error;
+      if (error.response.status === 401) {
+        localStorage.removeItem("jwt");
+        window.location.href = "/Login"; // Redirect to login page
+      } else {
+        console.log(error);
+        return error;
+      }
     });
 };
 
@@ -82,7 +99,7 @@ export const getAllResponsive = () => {
   return axios
     .get(`${apiURL}${apiResponsiveURI}`, {
       headers: {
-        Authorization: `Bearer ${bearerToken}`,
+        Authorization: `Bearer ${localStorage.getItem("jwt")}`,
       },
     })
     .then((response) => {
@@ -93,8 +110,13 @@ export const getAllResponsive = () => {
       }
     })
     .catch((error) => {
-      console.log("Error");
-      return error;
+      if (error.response.status === 401) {
+        localStorage.removeItem("jwt");
+        window.location.href = "/Login"; // Redirect to login page
+      } else {
+        console.log("Error");
+        return error;
+      }
     });
 };
 
@@ -102,7 +124,7 @@ export const deleteResponsive = (responsiveID) => {
   return axios
     .delete(`${apiURL}${apiResponsiveURI}/${responsiveID}`, {
       headers: {
-        Authorization: `Bearer ${bearerToken}`,
+        Authorization: `Bearer ${localStorage.getItem("jwt")}`,
       },
     })
     .then((response) => {
@@ -113,8 +135,13 @@ export const deleteResponsive = (responsiveID) => {
       }
     })
     .catch((error) => {
-      console.log("Error");
-      return error;
+      if (error.response.status === 401) {
+        localStorage.removeItem("jwt");
+        window.location.href = "/Login"; // Redirect to login page
+      } else {
+        console.log("Error");
+        return error;
+      }
     });
 };
 
@@ -127,7 +154,7 @@ export const postUser = (responsiveData) => {
   return axios
     .post(`${apiURL}${apiUsersURI}`, responsiveData, {
       headers: {
-        Authorization: `Bearer ${bearerToken}`,
+        Authorization: `Bearer ${localStorage.getItem("jwt")}`,
         "content-type": "multipart/form-data",
       },
     })
@@ -139,8 +166,13 @@ export const postUser = (responsiveData) => {
       }
     })
     .catch((error) => {
-      console.log("Error", error);
-      return { error: "Network error" };
+      if (error.response.status === 401) {
+        localStorage.removeItem("jwt");
+        window.location.href = "/Login"; // Redirect to login page
+      } else {
+        console.log("Error", error);
+        return { error: "Network error" };
+      }
     });
 };
 
@@ -148,7 +180,7 @@ export const putUser = (responsiveID, newResponsiveData) => {
   return axios
     .put(`${apiURL}${apiUsersURI}/${responsiveID}`, newResponsiveData, {
       headers: {
-        Authorization: `Bearer ${bearerToken}`,
+        Authorization: `Bearer ${localStorage.getItem("jwt")}`,
         "content-type": "multipart/form-data",
       },
     })
@@ -160,8 +192,13 @@ export const putUser = (responsiveID, newResponsiveData) => {
       }
     })
     .catch((error) => {
-      console.log("Error");
-      return error;
+      if (error.response.status === 401) {
+        localStorage.removeItem("jwt");
+        window.location.href = "/Login"; // Redirect to login page
+      } else {
+        console.log("Error");
+        return error;
+      }
     });
 };
 
@@ -169,7 +206,7 @@ export const getUser = (responsiveID) => {
   return axios
     .get(`${apiURL}${apiUsersURI}/${responsiveID}`, {
       headers: {
-        Authorization: `Bearer ${bearerToken}`,
+        Authorization: `Bearer ${localStorage.getItem("jwt")}`,
       },
     })
     .then((response) => {
@@ -180,8 +217,13 @@ export const getUser = (responsiveID) => {
       }
     })
     .catch((error) => {
-      console.log(error);
-      return error;
+      if (error.response.status === 401) {
+        localStorage.removeItem("jwt");
+        window.location.href = "/Login"; // Redirect to login page
+      } else {
+        console.log(error);
+        return error;
+      }
     });
 };
 
@@ -189,7 +231,7 @@ export const getAllUsers = () => {
   return axios
     .get(`${apiURL}${apiUsersURI}`, {
       headers: {
-        Authorization: `Bearer ${bearerToken}`,
+        Authorization: `Bearer ${localStorage.getItem("jwt")}`,
       },
     })
     .then((response) => {
@@ -200,8 +242,13 @@ export const getAllUsers = () => {
       }
     })
     .catch((error) => {
-      console.log("Error");
-      return error;
+      if (error.response.status === 401) {
+        localStorage.removeItem("jwt");
+        window.location.href = "/Login"; // Redirect to login page
+      } else {
+        console.log("Error");
+        return error;
+      }
     });
 };
 
@@ -209,7 +256,7 @@ export const deleteUser = (responsiveID) => {
   return axios
     .delete(`${apiURL}${apiUsersURI}/${responsiveID}`, {
       headers: {
-        Authorization: `Bearer ${bearerToken}`,
+        Authorization: `Bearer ${localStorage.getItem("jwt")}`,
       },
     })
     .then((response) => {
@@ -222,13 +269,14 @@ export const deleteUser = (responsiveID) => {
       }
     })
     .catch((error) => {
-      console.log("Error");
-      console.log("RESPUESTA:", error.response);
       if (error.response.status === 404) {
         return {
           error:
             "Error: Contacte con soporte para eliminar al usuario o revise el manual de usuario",
         };
+      } else if (error.response.status === 401) {
+        localStorage.removeItem("jwt");
+        window.location.href = "/Login"; // Redirect to login page
       } else {
         return { error: "Server error" };
       }
@@ -245,7 +293,7 @@ export const getFile = (fileID) => {
     .get(`${apiURL}${apiFileURI}/${fileID}`, {
       responseType: "blob",
       headers: {
-        Authorization: `Bearer ${bearerToken}`,
+        Authorization: `Bearer ${localStorage.getItem("jwt")}`,
       },
     })
     .then((response) => {
@@ -256,8 +304,13 @@ export const getFile = (fileID) => {
       }
     })
     .catch((error) => {
-      console.log(error);
-      return error;
+      if (error.response.status === 401) {
+        localStorage.removeItem("jwt");
+        window.location.href = "/Login"; // Redirect to login page
+      } else {
+        console.log(error);
+        return error;
+      }
     });
 };
 
@@ -265,7 +318,7 @@ export const getFileData = (fileData) => {
   return axios
     .post(`${apiURL}${apiFileURI}/data`, fileData, {
       headers: {
-        Authorization: `Bearer ${bearerToken}`,
+        Authorization: `Bearer ${localStorage.getItem("jwt")}`,
         "content-type": "multipart/form-data",
       },
     })
@@ -277,8 +330,13 @@ export const getFileData = (fileData) => {
       }
     })
     .catch((error) => {
-      console.log(error);
-      return error;
+      if (error.response.status === 401) {
+        localStorage.removeItem("jwt");
+        window.location.href = "/Login"; // Redirect to login page
+      } else {
+        console.log(error);
+        return error;
+      }
     });
 };
 
@@ -302,8 +360,13 @@ export const getAllAuthAllowByUser = () => {
       }
     })
     .catch((error) => {
-      console.log(error);
-      return error;
+      if (error.response.status === 401) {
+        localStorage.removeItem("jwt");
+        window.location.href = "/Login"; // Redirect to login page
+      } else {
+        console.log(error);
+        return error;
+      }
     });
 };
 
@@ -322,8 +385,13 @@ export const updateAuthAllow = (authAllowId, authAllowData) => {
       }
     })
     .catch((error) => {
-      console.log("Error");
-      return error;
+      if (error.response.status === 401) {
+        localStorage.removeItem("jwt");
+        window.location.href = "/Login"; // Redirect to login page
+      } else {
+        console.log("Error");
+        return error;
+      }
     });
 };
 
@@ -347,8 +415,13 @@ export const getAllAuthRequestData = () => {
       }
     })
     .catch((error) => {
-      console.log("Error");
-      return error;
+      if (error.response.status === 401) {
+        localStorage.removeItem("jwt");
+        window.location.href = "/Login"; // Redirect to login page
+      } else {
+        console.log("Error");
+        return error;
+      }
     });
 };
 
@@ -367,8 +440,13 @@ export const deleteAuthRequest = (id) => {
       }
     })
     .catch((error) => {
-      console.log("Error");
-      return error;
+      if (error.response.status === 401) {
+        localStorage.removeItem("jwt");
+        window.location.href = "/Login"; // Redirect to login page
+      } else {
+        console.log("Error", error);
+        return error;
+      }
     });
 };
 
@@ -391,6 +469,15 @@ export const getAllUsersServers = () => {
       } else {
         return { error: "Server Error" };
       }
+    })
+    .catch((error) => {
+      if (error.response.status === 401) {
+        localStorage.removeItem("jwt");
+        window.location.href = "/Login"; // Redirect to login page
+      } else {
+        console.log("Error", error);
+        return error;
+      }
     });
 };
 /**
@@ -410,6 +497,15 @@ export const getAllServers = () => {
         return response.data;
       } else {
         return { error: "Server Error" };
+      }
+    })
+    .catch((error) => {
+      if (error.response.status === 401) {
+        localStorage.removeItem("jwt");
+        window.location.href = "/Login"; // Redirect to login page
+      } else {
+        console.log("Error", error);
+        return error;
       }
     });
 };
@@ -471,7 +567,6 @@ export const postLogin = (loginData) => {
     .post(`${apiBase}${loginURI}`, loginData)
     .then((response) => {
       if (response.status === 200) {
-        console.log("200 ERR");
         return response.data;
       } else {
         return { error: "Server Error" };
@@ -527,6 +622,45 @@ export const postRequestRegister = (registerData) => {
 };
 
 /**
+ * Restore
+ */
+
+const restoreURI = "/forgot-password";
+
+export const postRestoreLoginByEmail = (email) => {
+  return axios
+    .post(`${apiBase}${restoreURI}`, email)
+    .then((response) => {
+      if (response.status === 200) {
+        return response.data;
+      } else {
+        return { error: "Server Error" };
+      }
+    })
+    .catch((error) => {
+      return { error: "Server Error" };
+    });
+};
+
+
+const resetURI = "/reset-password";
+
+export const postResetPassword = (resetToken) => {
+  return axios
+    .post(`${apiBase}${resetURI}`, resetToken)
+    .then((response) => {
+      if (response.status === 200) {
+        return response.data;
+      } else {
+        return { error: "Server Error" };
+      }
+    })
+    .catch((error) => {
+      return { error: "Server Error", ...error };
+    });
+}
+
+/**
  * Notifications
  */
 
@@ -560,7 +694,7 @@ export const putNotificationBot = (notificationData) => {
   return axios
     .put(`${apiURL}${notificationURI}${botURI}`, notificationData, {
       headers: {
-        Authorization: `Bearer ${bearerToken}`,
+        Authorization: `Bearer ${localStorage.getItem("jwt")}`,
       },
     })
     .then((response) => {
@@ -571,7 +705,12 @@ export const putNotificationBot = (notificationData) => {
       }
     })
     .catch((error) => {
-      return { error: `Server Error ${error}` };
+      if (error.response.status === 401) {
+        localStorage.removeItem("jwt");
+        window.location.href = "/Login"; // Redirect to login page
+      } else {
+        return { error: `Server Error ${error}` };
+      }
     });
 };
 
@@ -579,7 +718,7 @@ export const getNotificationBot = () => {
   return axios
     .get(`${apiURL}${notificationURI}${botURI}`, {
       headers: {
-        Authorization: `Bearer ${bearerToken}`,
+        Authorization: `Bearer ${localStorage.getItem("jwt")}`,
       },
     })
     .then((response) => {
@@ -587,6 +726,14 @@ export const getNotificationBot = () => {
         return response.data;
       } else {
         return { error: "Server Error" };
+      }
+    })
+    .catch((error) => {
+      if (error.response.status === 401) {
+        localStorage.removeItem("jwt");
+        window.location.href = "/Login"; // Redirect to login page
+      } else {
+        return { error: `Server Error ${error}` };
       }
     });
 };

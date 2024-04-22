@@ -17,6 +17,8 @@ import { ProtectedRouteContainer } from "./components/common/ProtectedRoute/Prot
 import { UserServers } from "./components/pages/UsersServers/UsersServers";
 import { ServersF3 } from "./components/pages/Servers/ServersF3";
 import { ServersF4 } from "./components/pages/Servers/ServersF4";
+import { RestorePassword } from "./components/pages/RestorePassword/RestorePassword";
+import { ResetPassword } from "./components/pages/ResetPassword/ResetPassword";
 function App() {
   return (
     <BrowserRouter>
@@ -29,7 +31,7 @@ function App() {
           <Route path="/Files" element={<ResponsivesCRUD />} />
           <Route
             path="/FilesThirdForm"
-            element={<ResponsiveThirdCard isInsertMode isThird/>}
+            element={<ResponsiveThirdCard isInsertMode isThird />}
           />
           <Route
             path="/FilesThirdForm/:fileID"
@@ -71,6 +73,8 @@ function App() {
         </Route>
         <Route path="/Login" element={<Login />} />
         <Route path="/Register" element={<Register />} />
+        <Route path="/Restore" element={<RestorePassword />} />
+        <Route path="/ResetPassword/:token" element={<ResetPassword />}/>
       </Routes>
     </BrowserRouter>
   );

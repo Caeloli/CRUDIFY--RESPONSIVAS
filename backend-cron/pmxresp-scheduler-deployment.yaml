@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pmxresp-scheduler-deployment
+  labels:
+    app: pmxresp-scheduler
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: pmxresp-scheduler
+  template:
+    metadata:
+      labels:
+        app: pmxresp-scheduler
+    spec:
+      containers:
+      - name: pmxresp-scheduler
+        image: frontend-pmxresp:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 10335
+        resources:
+          limits:
+            cpu: "0.5"
+            memory: "512Mi"
+          requests:
+            cpu: "0.1"
+            memory: "256Mi"

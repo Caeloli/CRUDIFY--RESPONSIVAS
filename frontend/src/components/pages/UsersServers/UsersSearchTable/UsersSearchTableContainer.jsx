@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useEffect, useMemo } from "react";
 import { UsersSearchTableView } from "./UsersSearchTableView";
 import {
   getCoreRowModel,
@@ -35,6 +35,7 @@ export function UsersSearchTableContainer({
   columns,
   pRowSelection,
   pSetRowSelection,
+  visibleData,
 }) {
   const [sorting, setSorting] = useState([]);
   const [rowSelection, setRowSelection] = useState({});
@@ -110,10 +111,38 @@ export function UsersSearchTableContainer({
     debugColumns: false,
   });
 
-  console.log(
-    "El RS: ",
-    JSON.stringify(table.getState().rowSelection, null, 2)
-  );
+  useEffect(() => {
+    if (visibleData) {
+      const getVisibleRawData = (rows = []) => {
+        if (!rows) {
+          return []; // Handle case where rows is undefined
+        }
+        return rows.map((row) => row.original);
+      };
+
+      if (columnFilters.length === 0) {
+          if (table.getSelectedRowModel().rows.length === 0) {
+            visibleData.current = getVisibleRawData(
+              table.getPreFilteredRowModel().flatRows
+            );
+          } else {
+            visibleData.current = getVisibleRawData(
+              table.getSelectedRowModel().flatRows
+            );
+          }
+        } 
+      } else {
+        if (table.getSelectedRowModel().rows.length === 0) {
+          visibleData.current = getVisibleRawData(
+            table.getFilteredRowModel().flatRows
+          );
+        } else {
+          visibleData.current = getVisibleRawData(
+            table.getFilteredSelectedRowModel().flatRows
+          );
+        }
+      }
+    }, [columnFilters, pRowSelection, rowSelection]);
 
   return (
     <UsersSearchTableView
@@ -155,7 +184,7 @@ function UsersTableServersFilter({ column, table }) {
         onChange={(value) => column.setFilterValue(value)}
         placeholder={`Search... (${column.getFacetedUniqueValues().size})`}
         className="mt-2 w-100 border rounded"
-        style={{height: "2.5rem"}}
+        style={{ height: "2.5rem" }}
         list={column.id + "list"}
       />
       <div className="h-1" />

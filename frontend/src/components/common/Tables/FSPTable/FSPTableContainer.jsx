@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { FSPTableView } from "./FSPTableView";
 import {
   getCoreRowModel,
@@ -53,12 +53,14 @@ export function FSPTableContainer({
   pRowSelection,
   pSetRowSelection,
   tableStyles,
+  visibleData,
 }) {
   const [sorting, setSorting] = useState([]);
   const [columnFilters, setColumnFilters] = useState([]);
   const [rowSelection, setRowSelection] = useState({});
   const [globalFilter, setGlobalFilter] = useState("");
   const rerender = React.useReducer(() => ({}), {})[1];
+
   const table = useReactTable({
     data,
     columns,
@@ -97,11 +99,46 @@ export function FSPTableContainer({
     getFacetedRowModel: getFacetedRowModel(),
     getFacetedUniqueValues: getFacetedUniqueValues(),
     getFacetedMinMaxValues: getFacetedMinMaxValues(),
-
     debugTable: true,
     debugHeaders: true,
     debugColumns: false,
   });
+
+  useEffect(() => {
+    //Filtered
+    if (visibleData) {
+      const getVisibleRawData = (rows = []) => {
+        console.log("Rows: ", rows);
+        if (!rows) {
+          return []; // Handle case where rows is undefined
+        }
+        return rows.map((row) => row.original);
+      };
+
+      if (columnFilters.length === 0) {
+        if (Object.keys(rowSelection).length === 0) {
+          visibleData.current = getVisibleRawData(
+            table.getPreFilteredRowModel().flatRows
+          );
+        } else {
+          visibleData.current = getVisibleRawData(
+            table.getSelectedRowModel().flatRows
+          );
+        }
+      } else {
+        if (Object.keys(rowSelection).length === 0) {
+          visibleData.current = getVisibleRawData(
+            table.getFilteredRowModel().flatRows
+          );
+        } else {
+          visibleData.current = getVisibleRawData(
+            table.getFilteredSelectedRowModel().flatRows
+          );
+        }
+      }
+    }
+    //RowSelected
+  }, [table, columnFilters, rowSelection]);
 
   return (
     <FSPTableView

@@ -2,7 +2,8 @@ import { faker } from "@faker-js/faker";
 import { useState } from "react";
 import * as XLSX from "xlsx";
 import { jwtDecode } from "jwt-decode";
-const range = (len) => {
+
+/*const range = (len) => {
   const arr = [];
   for (let i = 0; i < len; i++) {
     arr.push(i);
@@ -25,7 +26,7 @@ const newResponsive = () => {
   return {
     resp_id: faker.number.int({ min: 0, max: 10000 }),
     user_id_fk: faker.number.int(),
-    state_id_fk: faker.number.int({ min: 1, max: 2 }),
+    state_id_fk_fk: faker.number.int({ min: 1, max: 2 }),
     remedy: "TAS000001069050",
     token: 340861,
     user_name: faker.person.fullName(),
@@ -56,6 +57,8 @@ export function makeData(...lens) {
   return makeDataLevel();
 }
 
+*/
+
 // Convert string to ArrayBuffer
 function s2ab(s) {
   const buf = new ArrayBuffer(s.length);
@@ -69,20 +72,19 @@ export function exportToExcelResponsivesCrud(data) {
     "Response ID": item.resp_id,
     Estado:
       item.state_id_fk === 1
-        ? "Activa"
+        ? "Active"
         : item.state_id_fk === 2
         ? "Notificar"
         : item.state_id_fk === 3
-        ? "Expirada"
+        ? "Expirado"
         : item.state_id_fk === 4
         ? "Notificado"
+        : item.state_id_fk === 5
+        ? "Cancelado"
+        : item.state_id_fk === 6
+        ? "Renovada"
         : "Se desconoce",
-    Usuario: item.user_name,
-    "Correo Electrónico": item.email,
-    Teléfono: item.phone,
-    "Jefe Inmediato": item.immediately_chief,
     Remedy: item.remedy,
-    Token: item.token,
     "Fecha Inicio": item.start_date,
     "Fecha Fin": item.end_date,
     Formato: item.file_format,
@@ -114,8 +116,137 @@ export function exportToExcelResponsivesCrud(data) {
   link.click();
 }
 
+export function exportToExcelGeneralPanel(data) {
+  const dataForExcel = data.map((item) => ({
+    "Usuario": item.user_server_username,
+    "Correo Electrónico": item.email,
+    "Token": item.token,
+    "Jefe Inmediato": item.immediately_chief,
+    "Correo Jefe Inmediato: ":  item.immediately_chief_email, 
+    "Responsiva ID": item.resp_id,
+    "Estado":
+      item.state_id_fk === 1
+        ? "Active"
+        : item.state_id_fk === 2
+        ? "Notificar"
+        : item.state_id_fk === 3
+        ? "Expirado"
+        : item.state_id_fk === 4
+        ? "Notificado"
+        : item.state_id_fk === 5
+        ? "Cancelado"
+        : item.state_id_fk === 6
+        ? "Renovada"
+        : "Se desconoce",
+    "Remedy": item.remedy,
+    "Fecha Inicio": new Date(item.start_date).toISOString().split("T")[0],
+    "Fecha Fin": new Date(item.end_date).toISOString().split("T")[0],
+    "Formato": item.file_format,
+    "Marca": item.brand,
+    "Modelo": item.model,
+    "Ubicación": item.location,
+    "Número Serial": item.serial_number,
+    "Hostname": item.hostname,
+    "Dirección IP": item.ip_address,
+    "Dominio": item.domain_server,
+  }));
+
+  // Create a worksheet
+  const ws = XLSX.utils.json_to_sheet(dataForExcel);
+
+  // Create a workbook
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Sheet1");
+
+  // Generate binary Excel data
+  const excelBlob = XLSX.write(wb, {
+    bookType: "xlsx",
+    type: "binary",
+  });
+
+  // Create a Blob containing the Excel file
+  const blob = new Blob([s2ab(excelBlob)], {
+    type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  });
+
+  // Create a link element and trigger a download
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+
+  link.download = `general_responsivas_${new Date().getTime()}.xlsx`;
+  link.click();
+}
+
+export function exportToExcelServersF3Panel(data) {
+  const dataForExcel = data.map((item) => ({
+    "Hostname": item.hostname,
+    "Dirección IP": item.ip_address,
+    "Dominio": item.domain_server,
+  }));
+
+  // Create a worksheet
+  const ws = XLSX.utils.json_to_sheet(dataForExcel);
+
+  // Create a workbook
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Sheet1");
+
+  // Generate binary Excel data
+  const excelBlob = XLSX.write(wb, {
+    bookType: "xlsx",
+    type: "binary",
+  });
+
+  // Create a Blob containing the Excel file
+  const blob = new Blob([s2ab(excelBlob)], {
+    type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  });
+
+  // Create a link element and trigger a download
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+
+  link.download = `servidoresf3_${new Date().getTime()}.xlsx`;
+  link.click();
+}
+
+export function exportToExcelServersF4Panel(data) {
+  const dataForExcel = data.map((item) => ({
+    "Marca": item.brand,
+    "Modelo": item.model,
+    "Ubicación": item.location,
+    "Número Serial": item.serial_number,
+  }));
+
+  // Create a worksheet
+  const ws = XLSX.utils.json_to_sheet(dataForExcel);
+
+  // Create a workbook
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Sheet1");
+
+  // Generate binary Excel data
+  const excelBlob = XLSX.write(wb, {
+    bookType: "xlsx",
+    type: "binary",
+  });
+
+  // Create a Blob containing the Excel file
+  const blob = new Blob([s2ab(excelBlob)], {
+    type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  });
+
+  // Create a link element and trigger a download
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+
+  link.download = `servidoresf4_${new Date().getTime()}.xlsx`;
+  link.click();
+}
+
+
 export function decodeToken() {
-  const token = localStorage.getItem('jwt');
+  const token = localStorage.getItem("jwt");
   const decodedToken = jwtDecode(token);
   return decodedToken;
 }

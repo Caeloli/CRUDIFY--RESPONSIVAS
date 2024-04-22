@@ -2,6 +2,7 @@ import React from "react";
 import { Button, Col, Container, Form, Row } from "react-bootstrap";
 import { CustomSelect } from "../CustomSelect/CustomSelect";
 import { RxCross1 } from "react-icons/rx";
+import { useFormik } from "formik";
 
 export function UserSelectionView({
   isNewUserServer,
@@ -53,7 +54,7 @@ export function UserSelectionView({
                     name="user_name"
                     value={values.user_name}
                     disabled={isSubmit || isReadMode}
-                    onChange={handleChange}
+                    onChange={(e) => setFieldValue(e.target.name, e.target.value.toUpperCase())}
                     isInvalid={touched.user_name && !!errors.user_name}
                   />
                   <Form.Control.Feedback type="invalid">
@@ -88,7 +89,7 @@ export function UserSelectionView({
                     name="email"
                     value={values.email}
                     disabled={isSubmit || isReadMode}
-                    onChange={handleChange}
+                    onChange={(e) => setFieldValue(e.target.name, e.target.value.toUpperCase())}
                     isInvalid={touched.email && !!errors.email}
                   />
 
@@ -97,10 +98,10 @@ export function UserSelectionView({
                   </Form.Control.Feedback>
                 </Form.Group>
                 <Form.Group as={Col} md="6" controlId="validationFormikPhone">
-                  <Form.Label>Phone</Form.Label>
+                  <Form.Label>Teléfono</Form.Label>
                   <Form.Control
                     type="text"
-                    placeholder="Phone"
+                    placeholder="Teléfono"
                     name="phone"
                     value={values.phone}
                     disabled={isSubmit || isReadMode}
@@ -118,14 +119,14 @@ export function UserSelectionView({
                   md="6"
                   controlId="validationFormikImmediatelyChief"
                 >
-                  <Form.Label>Immediately Chief</Form.Label>
+                  <Form.Label>Jefe Inmediato</Form.Label>
                   <Form.Control
                     type="text"
-                    placeholder="Immediately Chief"
+                    placeholder="Jefe Inmediato"
                     name="immediately_chief"
                     value={values.immediately_chief}
                     disabled={isSubmit || isReadMode}
-                    onChange={handleChange}
+                    onChange={(e) => setFieldValue(e.target.name, e.target.value.toUpperCase())}
                     isInvalid={
                       touched.immediately_chief && !!errors.immediately_chief
                     }
@@ -148,7 +149,7 @@ export function UserSelectionView({
                     name="email_immediately_chief"
                     value={values.email_immediately_chief}
                     disabled={isSubmit || isReadMode}
-                    onChange={handleChange}
+                    onChange={(e) => setFieldValue(e.target.name, e.target.value.toUpperCase())}
                     isInvalid={
                       touched.email_immediately_chief &&
                       !!errors.email_immediately_chief

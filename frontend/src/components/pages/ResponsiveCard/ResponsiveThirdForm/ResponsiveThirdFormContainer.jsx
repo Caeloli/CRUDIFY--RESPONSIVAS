@@ -32,14 +32,22 @@ export function ResponsiveThirdFormContainer({
           phone: "",
           immediately_chief: "",
           email_immediately_chief: "",
-          servers: isThird ? [{
-            hostname: "",
-            domain_server: "",
-            ip_address: "",
-          }
-          ] : [{
-            brand: "", model: "", serial_number: "", location: ""
-          }],
+          servers: isThird
+            ? [
+                {
+                  hostname: "",
+                  domain_server: "",
+                  ip_address: "",
+                },
+              ]
+            : [
+                {
+                  brand: "",
+                  model: "",
+                  serial_number: "",
+                  location: "",
+                },
+              ],
 
           //windows_server: data.windows_server ?? "",
           //domain: data.domain ?? "",
@@ -114,12 +122,15 @@ export function ResponsiveThirdFormContainer({
       .oneOf([1, 2], "Usuario es Requerido"),
     after_responsive_id: yup.number().notRequired(),
     before_responsive_id: yup.number().notRequired(),
-    file: yup.mixed().required("Archivo es necesario"),
+    file: yup
+      .mixed().required("Archivo Responsiva es un campo obligatorio")
+      
   });
 
   const handleSubmit = async (values, actions) => {
     values.file_format = isThird ? 3 : 4;
     console.log("Values", values);
+
     values.after_responsive_id =
       values.after_responsive_id === "" ? null : values.after_responsive_id;
     values.before_responsive_id =
@@ -151,9 +162,8 @@ export function ResponsiveThirdFormContainer({
   };
 
   const handleFileChange = (evt) => {
-    console.log("El archivo es: ", evt.target.files[0]);
-    setPreviewFile(evt.target.files[0]);
-    setFile(evt.target.files[0]);
+      setPreviewFile(evt.target.files[0]);
+      setFile(evt.target.files[0]);
   };
 
   const handleAutoResponsive = (data) => {
@@ -167,17 +177,38 @@ export function ResponsiveThirdFormContainer({
       phone: "",
       immediately_chief: data.immediately_chief,
       email_immediately_chief: "",
-      servers: [],
+      servers: isThird
+        ? [
+            {
+              hostname: "",
+              domain_server: "",
+              ip_address: "",
+            },
+          ]
+        : [
+            {
+              brand: "",
+              model: "",
+              serial_number: "",
+              location: "",
+            },
+          ],
       //windows_server: data.windows_server ?? "",
       //domain: data.domain ?? "",
       //account: data.account ?? "",
       start_date: data.start_date,
-      end_date: data.end_date,
+      end_date: new Date(
+        new Date(data.start_date).setFullYear(
+          new Date(data.start_date).getFullYear() + 1
+        )
+      )
+        .toISOString()
+        .split("T")[0],
       //file_format: data.file_format,
       is_new_user: false,
       after_responsive_id: null,
       before_responsive_id: null,
-      file: data.file,
+      file: null,
     });
   };
 

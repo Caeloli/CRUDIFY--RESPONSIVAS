@@ -1,5 +1,5 @@
-import React, { useEffect, useMemo, useState } from "react";
-import { Col, Container, Row } from "react-bootstrap";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { Button, Col, Container, Row } from "react-bootstrap";
 import { UsersSearchTableContainer } from "./UsersSearchTable/UsersSearchTableContainer";
 import { ResponsivesTableContainer } from "./ResponsivesTable/ResponsivesTableContainer";
 import { ServersTableContainer } from "./ServersTable/ServersTableContainer";
@@ -8,6 +8,7 @@ import {
   getAllServers,
   getAllUsersServers,
 } from "../../../services/api";
+import { exportToExcelGeneralPanel } from "../../../func/func";
 
 export function UserServers() {
   const [usersData, setUsersData] = useState(null);
@@ -18,7 +19,6 @@ export function UserServers() {
   const [serverF4Data, setServerF4Data] = useState(null);
   const [serverData, setServerData] = useState(null);
   const [serverOriginalData, setServerOriginalData] = useState(null);
-
   const [rowSelectionUsers, setRowSelectionUsers] = useState({});
   const [rowSelectionResponsive, setRowSelectionResponsive] = useState({});
   const [rowSelectionServers, setRowSelectionServers] = useState({});
@@ -60,7 +60,6 @@ export function UserServers() {
   }, [rowSelectionUsers, responsiveOriginalData]);
 
   useEffect(() => {
-    console.log("SERVER DATA: ", serverData);
     if (!!serverData) {
       const filteredF3Data = serverData.filter((server) => !!server.hostname);
       const filteredF4Data = serverData.filter((server) => !!server.brand);
@@ -84,59 +83,121 @@ export function UserServers() {
     }
   }, [rowSelectionResponsive, serverOriginalData]);
 
-  console.log("Selection Users: ", rowSelectionUsers);
-  console.log("Selection Responsives: ", rowSelectionResponsive);
-  console.log("Selection Servers: ", rowSelectionServers);
+  const userDownloadableData = useRef([]);
+  const responsiveDownloadableData = useRef([]);
+
+  const joinUserResponsiveServerData = (
+    userData,
+    responsiveData,
+    serverData
+  ) => {
+    console.log("UserData: ", userData);
+    console.log("ResponsiveData: ", responsiveData);
+    console.log("ServerData: ", serverData);
+    const joinedData = userData.flatMap((user) =>
+      responsiveData
+        .filter(
+          (responsiveFile) =>
+            user.user_server_id === responsiveFile.user_servers_id_fk
+        )
+        .flatMap((userResponsiveFile) =>
+          serverData
+            .filter(
+              (server) =>
+                userResponsiveFile.resp_id === server.responsive_file_id_fk
+            )
+            .map((server) => ({
+              ...user,
+              ...userResponsiveFile,
+              ...server,
+            }))
+        )
+    );
+
+    return joinedData;
+  };
+
+  const handleGenerateXLXS = () => {
+    const joinedData = joinUserResponsiveServerData(
+      userDownloadableData.current,
+      responsiveDownloadableData.current,
+      serverData
+    );
+    console.log("Data unida: ", joinedData);
+    exportToExcelGeneralPanel(joinedData);
+  };
 
   return (
     <div style={{ margin: "0 auto", width: "90%" }}>
       <Row className="h-100">
-        <Col sm={12} md={4} className="h-100" style={{maxHeight: "90vh", minHeight: "90vh"}}>
-          <h3>Usuarios</h3>
-          {usersData && (
-            <UsersSearchTableContainer
-              data={usersData}
-              pSetRowSelection={setRowSelectionUsers}
-              pRowSelection={rowSelectionUsers}
-            />
-          )}
-        </Col>
-        <Col sm={12} md={8} className="h-100">
-          <Row className="h-50" style={{maxHeight: "45vh", minHeight: "45vh"}}>
-            <h3>Responsivas</h3>
-            {responsiveData && (
-              <ResponsivesTableContainer
-                data={responsiveData}
-                pSetRowSelection={setRowSelectionResponsive}
-                pRowSelection={rowSelectionResponsive}
+        <Col
+          sm={12}
+          md={4}
+          className=""
+          style={{ minHeight: "90vh", maxHeight: "90vh" }}
+        >
+          <Row>
+            <h4>Usuarios</h4>
+          </Row>
+          <Row className="overflow-y-scroll">
+            {usersData && (
+              <UsersSearchTableContainer
+                data={usersData}
+                pSetRowSelection={setRowSelectionUsers}
+                pRowSelection={rowSelectionUsers}
+                visibleData={userDownloadableData}
               />
             )}
           </Row>
-          <Row className="h-50" style={{maxHeight: "45vh", minHeight: "45vh"}}>
-            <h3>Servidores</h3>
-            {serverData && (
-              <>
-                {serverF3Data && (
-                  <Col sm={12} md={6}>
-                    <ServersTableContainer
-                      pRowSelection={rowSelectionServers}
-                      pSetRowSelection={setRowSelectionServers}
-                      data={serverF3Data}
-                      isThird
-                    />
-                  </Col>
-                )}
-                {serverF4Data && (
-                  <Col sm={12} md={6}>
-                    <ServersTableContainer
-                      pRowSelection={rowSelectionServers}
-                      pSetRowSelection={setRowSelectionServers}
-                      data={serverF4Data}
-                    />
-                  </Col>
-                )}
-              </>
-            )}
+          <Row>
+            <Button onClick={() => handleGenerateXLXS()}>Generar .xlxs</Button>
+          </Row>
+        </Col>
+        <Col sm={12} md={8} className="h-100">
+          <Row className="h-50 mb-5">
+            <Row>
+              <h4>Responsivas</h4>
+            </Row>
+            <Row>
+              {responsiveData && (
+                <ResponsivesTableContainer
+                  data={responsiveData}
+                  pSetRowSelection={setRowSelectionResponsive}
+                  pRowSelection={rowSelectionResponsive}
+                  visibleData={responsiveDownloadableData}
+                />
+              )}
+            </Row>
+          </Row>
+          <Row className="h-50">
+            <Row>
+              <h4>Servidores</h4>
+            </Row>
+            <Row>
+              {serverData && (
+                <>
+                  {serverF3Data && (
+                    <Col sm={12} md={6}>
+                      <ServersTableContainer
+                        pRowSelection={rowSelectionServers}
+                        pSetRowSelection={setRowSelectionServers}
+                        data={serverF3Data}
+                        isThird
+                      />
+                    </Col>
+                  )}
+                  {serverF4Data && (
+                    <Col sm={12} md={6}>
+                      <ServersTableContainer
+                        pRowSelection={rowSelectionServers}
+                        pSetRowSelection={setRowSelectionServers}
+                        data={serverF4Data}
+                      />
+                    </Col>
+                  )}
+                </>
+              )}
+            </Row>
           </Row>
         </Col>
       </Row>

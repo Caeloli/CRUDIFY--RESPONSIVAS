@@ -27,13 +27,13 @@ export function TableView({ table }) {
                   <th
                     key={header.id}
                     colSpan={header.colSpan}
-                    className="bg-success link-light"
+                    className="fw-bold"
                   >
                     {header.isPlaceholder ? null : (
                       <div
                         {...{
                           className: header.column.getCanSort()
-                            ? "cursor-pointer select-none"
+                            ? "cursor-pointer d-flex justify-content-evenly"
                             : "",
                           style: header.column.getCanSort()
                             ? { cursor: "pointer" }
@@ -41,11 +41,15 @@ export function TableView({ table }) {
                           onClick: header.column.getToggleSortingHandler(),
                         }}
                       >
-                        {flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
+                        <div>
+                          {flexRender(
+                            header.column.columnDef.header,
+                            header.getContext()
+                          )}
+                        </div>
+                        {header.column.getCanSort() && (
+                          <div>{renderSortSymbol(header.column)}</div>
                         )}
-                        {renderSortSymbol(header.column)}
                         {/*{{
                           asc: " 🔼",
                           desc: " 🔽",
@@ -74,7 +78,9 @@ export function TableView({ table }) {
               ))
             ) : (
               <tr>
-                <td colSpan={"100%"} className="text-center">No Data</td>
+                <td colSpan={"100%"} className="text-center">
+                  No Data
+                </td>
               </tr>
             )}
           </tbody>
