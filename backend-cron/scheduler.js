@@ -84,14 +84,12 @@ async function job() {
     const filteredResponsives = responsives.data.filter((responsive) => {
       const endDateDiff =
         (new Date(responsive.end_date) - currentDate) / (1000 * 60 * 60 * 24); // Difference in days
-      console.log("END DATE DIFF: ", Math.floor(endDateDiff));
       return (
         endDateDiff <= 30 &&
-        endDateDiff >= 0 &&
+        Math.ceil(endDateDiff) >= 0 &&
         (responsive.state_id_fk === 2 || responsive.state_id_fk === 4) &&
-        [30, 20, 10, 1].includes(Math.floor(endDateDiff))
+        [30, 20, 10, 1].includes(Math.ceil(endDateDiff))
       );
-      //return responsive.resp_id === 44;
     });
     // Perform inner join between filtered responsives and user servers
     const responsiveFullData = filteredResponsives.map((responsive) => {
@@ -130,7 +128,6 @@ async function job() {
         chatID: notifData.data.chat_group_id,
         text: text,
       });
-      
       const formData = new FormData();
       const data = {resp_id: responsive.resp_id, state_id_fk: 4 }
       formData.append("data", JSON.stringify(data));
@@ -164,21 +161,13 @@ async function updateResponsiveStatusJob() {
       },
     })
   ).data;
-  /*const states = (
+  const states = (
     await axios.get(`${backendPostgresql}${backendDir}/states`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
     })
   ).data;
-
-  const responsiveData = responsives.map((responsive) => {
-    const statesData = states.find(
-      (state) => state.state_id === responsive.state_id_fk
-    );
-    return { ...responsive, statesData };
-  });
-  */
 
   /**
    * 1	"active"
@@ -218,18 +207,23 @@ async function updateResponsiveStatusJob() {
       return responsive;
     })
     .filter((responsive) => responsive != undefined);
-
+    
   responsivesUpdate.forEach((responsive) => {
-    axios.put(
-      `${backendPostgresql}${backendDir}/responsive_file/${responsive.resp_id}`,
-      responsive,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
+    const formData = new FormData();
+      const data = responsive;
+      formData.append("data", JSON.stringify(data));
+      axios.put(
+        `${backendPostgresql}${backendDir}/responsive-file/${responsive.resp_id}`,
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "content-type": "multipart/form-data",
+          },
+        }
+      );
   });
+  
 }
 
 async function initializeScheduler() {
@@ -267,7 +261,7 @@ async function initializeScheduler() {
       async function () {
         try {
           await job();
-          //await updateResponsiveStatusJob();
+          await updateResponsiveStatusJob();
         } catch (error) {
           console.error("Error executing scheduled jobs:", error);
         }

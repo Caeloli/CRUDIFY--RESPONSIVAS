@@ -16,7 +16,7 @@ export function CardsHomeContainer({ responsiveData }) {
       notifCount++;
     } else if (responsive.state_id_fk == 3){
       expiredCount++;
-    } else {
+    } else if (responsive.state_id_fk == 4){
       notifiedCount++;
     }
   });

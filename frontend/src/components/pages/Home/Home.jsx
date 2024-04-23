@@ -24,7 +24,6 @@ export function Home() {
   useEffect(() => {
     const fetchResponsiveData = async () => {
       const result = await getAllResponsive();
-      console.log("RESULT: ", result);
       const filteredCardResult = result.filter((item) => item.state_id_fk != 5);
       setCardResponsiveData(filteredCardResult);
       const filteredResponsiveResult = result.filter(

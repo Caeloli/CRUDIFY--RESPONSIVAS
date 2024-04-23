@@ -198,74 +198,50 @@ CREATE TRIGGER set_responsive_files_state
 	EXECUTE
 	    FUNCTION SET_RESPONSIVE_FILES_STATE();
 
+-- Define a PostgreSQL function to update the state of responsive files based on certain conditions
 CREATE OR REPLACE FUNCTION UPDATE_RESPONSIVE_FILES_STATE()
-RETURNS TRIGGER AS 
-$update_responsive_files_state$
+RETURNS TRIGGER AS $update_responsive_files_state$
 DECLARE
     days_difference INT;
 BEGIN
     -- Check if the state is already "cancelled", if so, ignore the update
-    IF OLD.state_id_fk = (
-        SELECT state_id
-        FROM states
-        WHERE state_name = 'cancelled'
-    ) THEN
+    IF OLD.state_id_fk = (SELECT state_id FROM states WHERE state_name = 'cancelled') THEN
         RETURN OLD;
     END IF;
 
-    -- Check if the new state is already "cancelled", if so, ignore the update
-    IF NEW.state_id_fk = (
-        SELECT state_id FROM states WHERE state_name = 'cancelled'
-    ) THEN 
+    -- Check if the new state is "cancelled", if so, ignore the update
+    IF NEW.state_id_fk = (SELECT state_id FROM states WHERE state_name = 'cancelled') THEN 
         RETURN NEW;
     END IF;
 
-    -- If after_resp_id_fk is not null, update state_id_fk where state_name is 'renovated'
+    -- If after_resp_id_fk is not null, update state_id_fk to 'renovated'
     IF NEW.after_resp_id_fk IS NOT NULL THEN
-        NEW.state_id_fk := (
-            SELECT state_id
-            FROM states
-            WHERE state_name = 'renovated'
-        );
-    ELSIF OLD.state_id_fk = (
-        SELECT state_id
-        FROM states
-        WHERE state_name = 'notified'
-    ) THEN
-        NEW.state_id_fk := (
-            SELECT state_id
-            FROM states
-            WHERE state_name = 'expired'
-        );
+        NEW.state_id_fk := (SELECT state_id FROM states WHERE state_name = 'renovated');
+    
+    -- If after_resp_id_fk is null, determine days_difference
     ELSE
-        -- If after_resp_id_fk is null, calculate days_difference
         days_difference := EXTRACT(EPOCH FROM (NEW.end_date - NOW())) / (24 * 60 * 60)::INT;
+
         -- Update state based on days_difference
         IF days_difference > 30 THEN
-            NEW.state_id_fk := (
-                SELECT state_id
-                FROM states
-                WHERE state_name = 'active'
-            );
+            NEW.state_id_fk := (SELECT state_id FROM states WHERE state_name = 'active');
         ELSIF days_difference <= 30 AND days_difference > 0 THEN
-            NEW.state_id_fk := (
-                SELECT state_id
-                FROM states
-                WHERE state_name = 'notify'
-            );
+            -- Check if the new state is already "notified", if so, ignore the update
+            IF NEW.state_id_fk = (SELECT state_id FROM states WHERE state_name = 'notified') THEN 
+                RETURN NEW;
+            ELSE
+                NEW.state_id_fk := (SELECT state_id FROM states WHERE state_name = 'notify');
+            END IF;
         ELSE
-            NEW.state_id_fk := (
-                SELECT state_id
-                FROM states
-                WHERE state_name = 'expired'
-            );
+            NEW.state_id_fk := (SELECT state_id FROM states WHERE state_name = 'expired');
         END IF;
     END IF;
 
-    RETURN NEW;
+    RETURN NEW; -- Return the updated row
 END;
 $update_responsive_files_state$
-LANGUAGE plpgsql; 
+LANGUAGE plpgsql;
+
 
 DROP TRIGGER IF EXISTS update_responsive_files_state ON responsive_files;
 
