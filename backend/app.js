@@ -20,9 +20,10 @@ const authReqController = require("./controller/authorizationRequestController")
 const globals = require("./config/globalVariables");
 const router = require("./routes/routes");
 const crypto = require("crypto");
+const { authenticateUserLDAP } = require("./services/authenticationService");
 
-const salt = process.env.SALT;
-const sk = process.env.SK;
+const salt = process.env.PMXRESP_SALT;
+const sk = process.env.PMXRESP_SK;
 const notifAddress = process.env.NOTIFICATIONS_ADDRESS;
 
 (async () => {
@@ -30,7 +31,7 @@ const notifAddress = process.env.NOTIFICATIONS_ADDRESS;
     const db = await require("./config/database/sequelize");
     while (!db || !db.resetToken) {
       console.log("Waiting for sequelize database connection...");
-      await new Promise((resolve) => setTimeout(resolve, 1000)); // Wait for 1 second before trying again
+      await new Promise((resolve) => setTimeout(resolve, 1000)); 
     }
 
     app.use(
@@ -52,9 +53,9 @@ const notifAddress = process.env.NOTIFICATIONS_ADDRESS;
     );
 
     /* // Lista blanca de orígenes permitidos
-    let allowedOrigins = ["http://localhost:3000"]; // Origen predeterminado
+    let allowedOrigins = ["http://localhost:3000"]; 
 
-    // Agrega la dirección IP del servicio de Kubernetes a la lista blanca de allowedOrigins
+    
     const kubernetesServiceHost = process.env.KUBERNETES_SERVICE_HOST;
     if (kubernetesServiceHost) {
       allowedOrigins.push(`http://${kubernetesServiceHost}`);
@@ -71,6 +72,109 @@ const notifAddress = process.env.NOTIFICATIONS_ADDRESS;
       const { user, password } = req.body;
 
       try {
+        if (user.trim() !== globals.adminUser.email) {
+          const resultLDAP = await authenticateUserLDAP(user, password);
+          if (resultLDAP) {
+            const userStored = await userController.getUserByEmail(user);
+            if (userStored && userStored.is_active === true) {
+              const token = jwt.sign(
+                {
+                  user_id: userStored.user_id,
+                  email: userStored.email,
+                  user_type: userStored.user_type_id_fk,
+                },
+                sk,
+                {
+                  expiresIn: "1hr",
+                }
+              );
+              return res.status(200).json(token);
+            } else {
+              
+              const signupRequests =
+                await authReqController.getAllAuthRequest();
+              const signupPetitionFromUser = signupRequests.filter(
+                (signup) => signup.affected_email === user
+              );
+
+              if (signupPetitionFromUser.length === 0) {
+                if (userStored && userStored.is_active === false) {
+                  const authRequest = await authReqController.insertAuthRequest(
+                    {
+                      user_id_fk: globals.adminUser.user_id,
+                      action_id_fk: 2,
+                      request_date: new Date().getTime(),
+                      affected_email: user,
+                      affected_name: resultLDAP.attributes.displayName,
+                      affected_type: 1,
+                    }
+                  );
+                } else {
+                  const authRequest = await authReqController.insertAuthRequest(
+                    {
+                      user_id_fk: globals.adminUser.user_id,
+                      action_id_fk: 1,
+                      request_date: new Date().getTime(),
+                      affected_email: user,
+                      affected_name: resultLDAP.attributes.displayName,
+                      affected_type: 1,
+                    }
+                  );
+                }
+                const users = await userController.getAllUsers();
+                const adminUsers = users.filter(
+                  (user) => user.user_type_id_fk == 2 && user.is_active === true
+                );
+                adminUsers.map((adminUser) => {
+                  notificationServices.sendNotificationEmail(
+                    adminUser.email,
+                    `Solicitud de inscripción de usuario: ${user}`,
+                    `Se solicita a un administrador confirmar o denegar el permiso de inscripción para el usuario con el correo electrónico ${user} con permisos de operador. Por favor, tome las medidas necesarias para procesar esta solicitud.`
+                  );
+                });
+
+                return res.status(201).json({
+                  message: `Post authRequest successfully for ${user}`,
+                });
+              }
+              else {
+                return res.status(409).json({ message: "Your petition is already submitted" });    
+              }
+            }
+            //If not, assign new request for registering a new user
+          } else {
+            return res.status(401).json({ message: "Incorrect credentials" });
+          }
+        } else {
+          const hashedPassword = await bcrypt.hash(password, salt);
+          const userStored = await userController.getUserByEmail(user);
+          if (!userStored) {
+            return res.status(404).json({ message: "User not found" });
+          }
+
+          const passwordMatch = await bcrypt.compare(
+            password,
+            userStored.pswrd
+          );
+          console.log("PM", passwordMatch);
+          if (passwordMatch) {
+            const token = jwt.sign(
+              {
+                user_id: userStored.user_id,
+                email: userStored.email,
+                user_type: userStored.user_type_id_fk,
+              },
+              sk,
+              {
+                expiresIn: "1hr",
+              }
+            );
+            return res.status(200).json(token);
+          } else {
+            return res.status(401).json({ message: "Incorrect credentials" });
+          }
+        }
+        /*
         //const hashedPassword = await bcrypt.hash(password, salt);
         const userStored = await userController.getUserByEmail(user);
 
@@ -96,14 +200,14 @@ const notifAddress = process.env.NOTIFICATIONS_ADDRESS;
         } else {
           return res.status(401).json({ message: "Incorrect credentials" });
         }
+        */
       } catch (error) {
         console.error("Error during login:", error);
         return res.status(500).json({ message: "Internal server error" });
       }
     });
 
-
-    app.post("/register", async (req, res) => {
+    /*app.post("/register", async (req, res) => {
       try {
         const email = req.body.email;
         const userType = parseInt(req.body.userType);
@@ -143,7 +247,7 @@ const notifAddress = process.env.NOTIFICATIONS_ADDRESS;
         console.error("Error during registering: ", error);
         return res.status(500).json({ message: "Internal server error" });
       }
-    });
+    }); */
 
     app.get("/verify-token", async (req, res) => {
       const token = req.headers.authorization?.split(" ")[1]; // Extract the token from the Authorization header
@@ -162,42 +266,28 @@ const notifAddress = process.env.NOTIFICATIONS_ADDRESS;
       }
     });
 
-    /**
-     * Verifica correo electrónico
-     * Verifica si correo no tiene enlace activo,
-     * Si expiración aún no pasa de 1 día, indicar al usuario que tiene un token activo.
-     * Si no => Envío de enlace del frontend con enlace en su url
-     */
-
-    /**
-     * ResetTokens
-     * resetToken_Id
-     * user_id_fk
-     * reset_token
-     * reset_token_date
-     * reset_token_is_active
-     */
-
     app.get("/active", async (req, res) => {
       try {
-        return res
-          .status(200)
-          .json({ message: `Active ${process.env.PMXRESP_NOTIFICATIONS_SERVICE_SERVICE_HOST} ${process.env.PMXRESP_SCHEDULER_SERVICE_SERVICE_HOST} `});
+        return res.status(200).json({
+          message: `Active ${process.env.PMXRESP_NOTIFICATIONS_SERVICE_SERVICE_HOST} ${process.env.PMXRESP_SCHEDULER_SERVICE_SERVICE_HOST} `,
+        });
       } catch (error) {
         return res.status(500).json({ message: "Internal server error" });
       }
     });
 
-
-    app.get("/message", async(req, res) => {
-      try{
-        notificationServices.sendNotificationTelegram("-1001612435955", "Prueba de Pods")
-      } catch(error){
+    app.get("/message", async (req, res) => {
+      try {
+        notificationServices.sendNotificationTelegram(
+          "-1001612435955",
+          "Prueba de Pods"
+        );
+      } catch (error) {
         return res.status(500).json({ message: "Internal server error" });
       }
-    })
+    });
 
-    app.post("/forgot-password", async (req, res) => {
+    /* app.post("/forgot-password", async (req, res) => {
       try {
         const { email } = req.body;
         const user = await userController.getUserByEmail(email);
@@ -258,7 +348,7 @@ const notifAddress = process.env.NOTIFICATIONS_ADDRESS;
           .status(500)
           .json({ message: "Internal server error with restoring user" });
       }
-    });
+    }); */
 
     /**
      * Reset Password
@@ -269,7 +359,7 @@ const notifAddress = process.env.NOTIFICATIONS_ADDRESS;
      * Si no lo está, indica en la página que hubo un error y no se logró comprobar el enlace.
      */
 
-    app.post("/reset-password", async (req, res) => {
+    /*app.post("/reset-password", async (req, res) => {
       try {
         const { token } = req.body;
         const resetTokens =
@@ -304,7 +394,10 @@ const notifAddress = process.env.NOTIFICATIONS_ADDRESS;
                 });
 
                 const hashedPassword = await bcrypt.hash(newPassword, salt);
-                const passwordMatch = await bcrypt.compare(newPassword, hashedPassword);
+                const passwordMatch = await bcrypt.compare(
+                  newPassword,
+                  hashedPassword
+                );
                 console.log("PM", passwordMatch);
                 const updatedUser = await userController.updateUser(
                   user.user_id,
@@ -359,7 +452,7 @@ const notifAddress = process.env.NOTIFICATIONS_ADDRESS;
           message: "Error interno del servidor al restaurar el usuario",
         });
       }
-    });
+    }); */
 
     app.use("/pmx-resp", verifyToken, routes);
   } catch (error) {}

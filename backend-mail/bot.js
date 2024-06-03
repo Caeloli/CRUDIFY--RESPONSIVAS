@@ -3,8 +3,8 @@ const { session } = require("telegraf");
 const { default: axios } = require("axios");
 require("dotenv").config();
 
-const backendPostgresql = "http://localhost";
-//const backendPostgresql = "http://pmxresp-backend-service"; //"http://localhost";
+//const backendPostgresql = "http://localhost";
+const backendPostgresql = "http://pmxresp-backend-service"; //"http://localhost";
 const backendDir = "/pmx-resp";
 const EMAIL_INPUT = 0;
 let bot;

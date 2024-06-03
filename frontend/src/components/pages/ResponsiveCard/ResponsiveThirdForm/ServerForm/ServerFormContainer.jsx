@@ -22,7 +22,7 @@ export function ServerFormContainer({
   };
 
   const handleServerSubmit = (values) => {
-    console.log("Hss", values);
+    
   }
 
   return (

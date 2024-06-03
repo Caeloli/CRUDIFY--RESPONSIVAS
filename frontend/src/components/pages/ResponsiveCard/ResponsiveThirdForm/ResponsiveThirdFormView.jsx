@@ -32,7 +32,6 @@ export function ResponsiveThirdFormView({
   const [showFileModal, setShowFileModal] = useState();
   const [isSubmit, setIsSubmit] = useState(false);
   const [servers, setServers] = useState([]);
-  console.log("INIT: ", initialValues);
   const navigate = useNavigate();
 
   const handleShowFileModal = () => {
@@ -256,7 +255,7 @@ export function ResponsiveThirdFormView({
                               <Col className="d-flex justify-content-end">
                                 {index !== 0 && (
                                   <RxCross1
-                                    onClick={() => remove()}
+                                    onClick={() => remove(index)}
                                     className="exit-cross-button"
                                   />
                                 )}

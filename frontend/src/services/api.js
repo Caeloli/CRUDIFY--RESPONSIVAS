@@ -1,10 +1,10 @@
 import axios from "axios";
 
-const apiBase = "http://localhost"//"http://pmxresp-backend-service";//process.env.PMXRESP_BACKEND_SERVICE_SERVICE_HOST ?? "http://pmxresp-backend-service.ns-gsd-spar-qa01.svc.cluster.local" ?? "http://localhost";
+//const apiBase = "http://localhost"//"http://pmxresp-backend-service";//process.env.PMXRESP_BACKEND_SERVICE_SERVICE_HOST ?? "http://pmxresp-backend-service.ns-gsd-spar-qa01.svc.cluster.local" ?? "http://localhost";
 
-//let apiBase = "http://172.19.70.24"; // Default API base URL
-console.log("apiBase: ", apiBase)
-// Set the API base URL to the Kubernetes service host if available
+let apiBase = "http://172.19.70.24"; // Default API base URL
+console.log("apiBase: ", apiBase);
+
 
 const apiURL = `${apiBase}/pmx-resp`;
 
@@ -252,9 +252,9 @@ export const getAllUsers = () => {
     });
 };
 
-export const deleteUser = (responsiveID) => {
+export const deleteUser = (userID) => {
   return axios
-    .delete(`${apiURL}${apiUsersURI}/${responsiveID}`, {
+    .delete(`${apiURL}${apiUsersURI}/${userID}`, {
       headers: {
         Authorization: `Bearer ${localStorage.getItem("jwt")}`,
       },
@@ -425,6 +425,31 @@ export const getAllAuthRequestData = () => {
     });
 };
 
+export const acceptAuthRequest = (id) => {
+  return axios
+    .post(`${apiURL}${apiAuthRequestURI}/accept/${id}`,{},{
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("jwt")}`,
+      },
+    })
+    .then((response) => {
+      if (response.status === 200) {
+        return response.data; // Only return data for successful responses
+      } else {
+        return { error: "Server error" }; // You can customize this for error responses
+      }
+    })
+    .catch((error) => {
+      if (error.response.status === 401) {
+        localStorage.removeItem("jwt");
+        window.location.href = "/Login"; // Redirect to login page
+      } else {
+        console.log("Error", error);
+        return error;
+      }
+    });
+}
+
 export const deleteAuthRequest = (id) => {
   return axios
     .delete(`${apiURL}${apiAuthRequestURI}/${id}`, {
@@ -568,15 +593,20 @@ export const postLogin = (loginData) => {
     .then((response) => {
       if (response.status === 200) {
         return response.data;
-      } else {
+      } else if(response.status === 201) {
+        return response.error = {error: "Su petición ha sido solicitada"}
+      }
+      else {
         return { error: "Server Error" };
       }
     })
     .catch((error) => {
       if (error.response && error.response.status === 404) {
-        console.log("404 ERR");
         return { error: "Usuario no Encontrado" };
-      } else {
+      } if(error.response.status === 409){
+        return { error: "Su petición está siendo validada"}
+      }
+      else {
         return { error: "Server Error" };
       }
     });

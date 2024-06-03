@@ -22,7 +22,6 @@ export function ResponsiveThirdCard({
     const fetchResponsiveData = async () => {
       try {
         const result = await getResponsive(fileID);
-        console.log("Result: ", result);
         result.before_responsive_id = result.before_resp_id_fk;
         result.after_responsive_id = result.after_resp_id_fk;
         if (isRenewMode) {

@@ -4,7 +4,7 @@ require("./scheduler").initializeScheduler();
 require("dotenv").config();
 const logger = require("morgan");
 const app = express();
-const port = 10335;
+const port = 80; //10335;
 
 app.use(logger("dev"));
 app.use(express.json());

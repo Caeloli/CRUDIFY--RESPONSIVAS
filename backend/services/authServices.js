@@ -6,7 +6,7 @@ const authReqController = require("../controller/authorizationRequestController"
 const userController = require("../controller/usersController");
 const notificationServices = require("./axiosServices/notificationServices");
 require("dotenv").config();
-const salt = process.env.SALT;
+const salt = process.env.PMXRESP_SALT;
 
 const checkAuthRequest = async (requestId) => {
   try {

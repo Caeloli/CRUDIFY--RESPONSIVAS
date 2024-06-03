@@ -1,7 +1,8 @@
 import React, { useEffect, useMemo, useState } from "react";
 import {
+  acceptAuthRequest,
   deleteAuthRequest,
-  getAllAuthAllowByUser,
+  getAllAuthRequestData,
   updateAuthAllow,
 } from "../../../../services/api";
 import { FSPTableContainer } from "../../../common/Tables/FSPTable/FSPTableContainer";
@@ -14,9 +15,9 @@ export function AuthorizationContainer() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const authAllows = await getAllAuthAllowByUser();
-        console.log("Auth allow: ", authAllows);
-        setAuthData(authAllows);
+        const authRequest = await getAllAuthRequestData();
+        console.log("Auth Request: ", authRequest);
+        setAuthData(authRequest);
       } catch (error) {
         console.error("Error fetch auth data", error);
       }
@@ -27,13 +28,13 @@ export function AuthorizationContainer() {
 
   const columns = useMemo(() => [
     {
-      accessorFn: (row) => row.AuthorizationRequest.request_id,
+      accessorFn: (row) => row.request_id,
       id: "request_id",
       cell: (info) => info.getValue(),
       header: () => <span>ID</span>,
     },
     {
-      accessorFn: (row) => row.AuthorizationRequest.action_id_fk,
+      accessorFn: (row) => row.action_id_fk,
       id: "action_id_fk",
       cell: (info) =>
         info.getValue() === 1
@@ -46,23 +47,16 @@ export function AuthorizationContainer() {
       header: () => <span>Acción</span>,
     },
     {
-      accessorFn: (row) => row.AuthorizationRequest.request_date,
+      accessorFn: (row) => row.request_date,
       id: "request_date",
       cell: (info) => info.getValue(),
       header: () => <span>Fecha de Solicitud</span>,
     },
     {
-      accessorFn: (row) => row.AuthorizationRequest.affected_email,
+      accessorFn: (row) => row.affected_email,
       id: "affected_email",
       cell: (info) => info.getValue(),
       header: () => <span>Correo por Registrar</span>,
-    },
-    {
-      accessorFn: (row) => row.is_allowed,
-      id: "is_allowed",
-      cell: (info) =>
-        info.getValue() ? "Aceptado\n(esperando confirmación)" : "No aceptado",
-      header: () => <span>Avalado</span>,
     },
     {
       accessorFn: (row) => row,
@@ -71,38 +65,23 @@ export function AuthorizationContainer() {
         return (
           <Row>
             <Col md={12} className="d-flex justify-content-evenly">
-              {info.getValue().is_allowed ? (
+            <FaCheck
+                  style={{
+                    cursor: "pointer",
+                    fontSize: "1.5rem",
+                    color: "#1A855E",
+                  }}
+                  onClick={() => handleAcceptRequest(info.getValue().request_id)}
+                />
+            
                 <IoMdClose
                   style={{
                     cursor: "pointer",
                     fontSize: "1.5rem",
                     color: "#FB4D83",
                   }}
-                  onClick={() => handleDenyRequest(info.getValue().allow_id)}
+                  onClick={() => handleDenyRequest(info.getValue().request_id)}
                 />
-              ) : (
-                <FaCheck
-                  style={{
-                    cursor: "pointer",
-                    fontSize: "1.5rem",
-                    color: "#1A855E",
-                  }}
-                  onClick={() => handleAcceptRequest(info.getValue().allow_id)}
-                />
-              )}
-
-              <IoMdTrash
-                style={{
-                  cursor: "pointer",
-                  fontSize: "1.5rem",
-                  color: "#FB4D83",
-                }}
-                onClick={() =>
-                  handleDeleteRequest(
-                    info.getValue().AuthorizationRequest.request_id
-                  )
-                }
-              />
             </Col>
           </Row>
         );
@@ -111,21 +90,15 @@ export function AuthorizationContainer() {
     },
   ]);
 
-  const handleDeleteRequest = async (id) => {
+  const handleDenyRequest = async (id) => {
     console.log("VALOR:", id);
     const result = await deleteAuthRequest(id);
     setUpdate(!update);
   };
 
-  const handleDenyRequest = async (id) => {
-    console.log("VALOR:", id);
-    const result = await updateAuthAllow(id, { is_allowed: false });
-    setUpdate(!update);
-  };
-
   const handleAcceptRequest = async (id) => {
     console.log("VALOR:", id);
-    const result = await updateAuthAllow(id, { is_allowed: true });
+    const result = await acceptAuthRequest(id);
     setUpdate(!update);
   };
 

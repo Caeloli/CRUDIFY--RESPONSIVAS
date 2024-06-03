@@ -45,9 +45,10 @@ CREATE TABLE
     users(
         user_id SERIAL PRIMARY KEY,
         email VARCHAR(60) NOT NULL,
-        pswrd VARCHAR(90) NOT NULL,
-        user_type_id_fk INT REFERENCES user_type(user_type_id)
-        
+        name VARCHAR(90) NULL,
+        pswrd VARCHAR(90) NULL,
+        user_type_id_fk INT REFERENCES user_type(user_type_id),
+        is_active BOOLEAN NOT NULL
     );
 
 
@@ -104,6 +105,7 @@ CREATE TABLE
         request_date TIMESTAMP NOT NULL,
         affected_user_id INT NULL,
         affected_email VARCHAR(50) NULL,
+        affected_name VARCHAR(90) NULL,
         affected_type INT NULL,
         chat_id VARCHAR(30) NULL
     );
@@ -315,6 +317,7 @@ END;
 $verify_responsive_files_state$ LANGUAGE plpgsql;
 
 
+/*//For generating authorization allows, execute this code: 
 
 CREATE OR REPLACE FUNCTION insert_authorization_allow()
 RETURNS TRIGGER AS $$
@@ -329,11 +332,16 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Create an AFTER INSERT trigger on the authorization_request table
+DROP TRIGGER IF EXISTS authorization_request_insert_trigger ON authorization_request;
 CREATE TRIGGER authorization_request_insert_trigger
 AFTER INSERT ON authorization_request
 FOR EACH ROW
 EXECUTE FUNCTION insert_authorization_allow();
 
+
+// up to here
+
+*/
 /*
  CREATE OR REPLACE FUNCTION schedule_update()
  RETURN TRIGGER AS $$

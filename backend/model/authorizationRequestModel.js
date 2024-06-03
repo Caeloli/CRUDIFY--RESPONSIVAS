@@ -19,15 +19,15 @@ const AuthorizationRequest = (sequelize) => {
           model: "users",
           key: "user_id",
         },
-        allowNull: false
+        allowNull: false,
       },
       action_id_fk: {
         type: DataTypes.INTEGER,
         references: {
-            model: "actions",
-            key: "action_id",
-          },
-        allowNull: false
+          model: "actions",
+          key: "action_id",
+        },
+        allowNull: false,
       },
       request_date: {
         type: DataTypes.DATE,
@@ -35,14 +35,21 @@ const AuthorizationRequest = (sequelize) => {
       },
       affected_user_id: {
         type: DataTypes.INTEGER,
-        allowNull: true
+        allowNull: true,
       },
       affected_email: {
         type: DataTypes.STRING(50),
         allowNull: true,
         validate: {
-            len: [0, 50],
-          },
+          len: [0, 50],
+        },
+      },
+      affected_name: {
+        type: DataTypes.STRING(90),
+        allowNull: true,
+        validate: {
+          len: [0, 90],
+        },
       },
       affected_type: {
         type: DataTypes.INTEGER,
@@ -51,7 +58,7 @@ const AuthorizationRequest = (sequelize) => {
       chat_id: {
         type: DataTypes.STRING(30),
         allowNull: true,
-      }
+      },
     },
     {
       tableName: "authorization_request",

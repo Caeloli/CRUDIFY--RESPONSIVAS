@@ -8,14 +8,13 @@ export function Login() {
   const navigate = useNavigate();
 
   const handleSubmit = async (values, actions) => {
-    console.log("Envio de login");
     const result = await postLogin(values);
-    console.log("resultado: ", result);
     if (!result.error) {
       localStorage.setItem("jwt", result);
       return true; // Success
     } else {
-      actions.setErrors({ password: "Usuario o contraseña incorrectos" });
+      console.log("Errors: ", result.error);
+      actions.setErrors({ password: result.error });
       console.log("Error, envio falso");
       return false; // Error
     }
@@ -96,10 +95,14 @@ export function Login() {
                     />
 
                     <Form.Control.Feedback type="invalid">
+                      <h6>
                       {errors.password}
+                      </h6>
                     </Form.Control.Feedback>
                   </Form.Group>
                 </Row>
+
+                {/*
                 <Row>
                   <Link to={"/Register"}>
                     <p style={{ textDecoration: "underline" }}>
@@ -114,6 +117,7 @@ export function Login() {
                     </p>
                   </Link>
                 </Row>
+                */}
                 <Row>
                   <Form.Group>
                     <Button className="mb-3" type="submit">

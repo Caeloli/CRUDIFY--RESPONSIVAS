@@ -14,17 +14,16 @@ const { default: axios } = require("axios");
 const { text, response } = require("express");
 //const url_name = "http://172.19.70.21:30203/pmx-resp/files/";
 
-//const backendPostgresql = "http://pmxresp-backend-service";
-const backendPostgresql =
-  process.env.PMXRESP_BACKEND_SERVICE_SERVICE_HOST ?? "http://localhost";
-//const frontendDir = "http://pmxresp-frontend-service";
-const frontendDir =
-  process.env.PMXRESP_FRONTEND_SERVICE_SERVICE_HOST ?? "http://localhost:3000";
+const backendPostgresql = "http://pmxresp-backend-service";
+//const backendPostgresql =
+  //process.env.PMXRESP_BACKEND_SERVICE_SERVICE_HOST ?? "http://localhost";
+const frontendDir = "http://pmxresp-frontend-service";
+//const frontendDir =
+  //process.env.PMXRESP_FRONTEND_SERVICE_SERVICE_HOST ?? "http://localhost:3000";
 const backendDir = "/pmx-resp";
-//const backendNotification = "http://pmxresp-notifications-service";
-const backendNotification =
-  process.env.PMXRESP_NOTIFICATIONS_SERVICE_SERVICE_HOST ??
-  "http://localhost:10333";
+const backendNotification = "http://pmxresp-notifications-service";
+//const backendNotification =
+//  process.env.PMXRESP_NOTIFICATIONS_SERVICE_SERVICE_HOST ??  "http://localhost:10333";
 let notificationSchedule;
 
 async function job() {

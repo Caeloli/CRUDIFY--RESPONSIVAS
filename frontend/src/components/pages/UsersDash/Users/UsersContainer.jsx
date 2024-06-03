@@ -21,7 +21,7 @@ export function UsersContainer() {
         const users = await getAllUsers();
         const info = decodeToken();
         const filteredUsers = users.filter(
-          (user) => user.user_id !== info.user_id
+          (user) => user.user_id !== info.user_id && user.is_active === true
         );
         setUserData(filteredUsers);
       } catch (error) {

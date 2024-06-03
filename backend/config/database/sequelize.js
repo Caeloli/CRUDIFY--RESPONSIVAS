@@ -1,8 +1,6 @@
 const { Sequelize } = require("sequelize");
 const { dbConfigData } = require("./db");
 const { postgreSQLInitValuesDB } = require("../../services/dbServices");
-//const { startBot } = require("../../services/bot/tbot");
-//const initializeScheduler = require("../../services/schedule/scheduler");
 
 const sequelize = new Sequelize(
   dbConfigData.database,

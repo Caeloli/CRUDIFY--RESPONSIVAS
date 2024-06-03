@@ -72,9 +72,11 @@ function App() {
           <Route path="/Settings" element={<Settings />} />
         </Route>
         <Route path="/Login" element={<Login />} />
+        {/*
         <Route path="/Register" element={<Register />} />
         <Route path="/Restore" element={<RestorePassword />} />
         <Route path="/ResetPassword/:token" element={<ResetPassword />}/>
+        */}
       </Routes>
     </BrowserRouter>
   );

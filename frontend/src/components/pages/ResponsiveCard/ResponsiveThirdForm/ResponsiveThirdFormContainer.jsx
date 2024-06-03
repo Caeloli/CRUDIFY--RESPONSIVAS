@@ -129,7 +129,6 @@ export function ResponsiveThirdFormContainer({
 
   const handleSubmit = async (values, actions) => {
     values.file_format = isThird ? 3 : 4;
-    console.log("Values", values);
 
     values.after_responsive_id =
       values.after_responsive_id === "" ? null : values.after_responsive_id;
@@ -165,15 +164,14 @@ export function ResponsiveThirdFormContainer({
       setPreviewFile(evt.target.files[0]);
       setFile(evt.target.files[0]);
   };
-
+  
   const handleAutoResponsive = (data) => {
-    console.log("Se llama a handleAutoResponsive con los datos de", data.file);
     setInitialValues({
       resp_id: "",
       remedy: data.remedy,
       token: data.token,
       user_name: data.user_server_id ?? data.user_name ?? "",
-      email: data.email,
+      email: data.email.toUpperCase(),
       phone: "",
       immediately_chief: data.immediately_chief,
       email_immediately_chief: "",
@@ -214,13 +212,11 @@ export function ResponsiveThirdFormContainer({
 
   const handleNextResponsiveProcess = (idResp) => {
     const id = Object.keys(idResp)[0] ?? null;
-    console.log("EL ID RESP: ", id);
     setNextResponsive(id);
   };
 
   const handleBeforeResponsiveProcess = (idResp) => {
     const id = Object.keys(idResp)[0] ?? null;
-    console.log("EL ID RESP: ", id);
     setBeforeResponsive(id);
   };
 

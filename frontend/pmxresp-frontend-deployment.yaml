@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: pmxresp-frontend-deployment
+  namespace: ns-gsd-spar-qa01
   labels:
     app: pmxresp-frontend
 spec:

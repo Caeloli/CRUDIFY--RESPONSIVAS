@@ -6,7 +6,7 @@ require("dotenv").config();
 require("./bot").startBot();
 const bot = require("./bot");
 const app = express();
-const port = 10333; // Puerto en el que se ejecutará el servidor
+const port = 80; //10333; // Puerto en el que se ejecutará el servidor
 
 const emailQueue = new Queue({
   concurrency: 1,

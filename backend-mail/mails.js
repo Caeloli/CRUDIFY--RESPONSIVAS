@@ -6,6 +6,14 @@ let transporter = undefined;
 
 async function transportCreate() {
   transporter = nodemailer.createTransport({
+    /*host: "smtpapps.un.pemex.com",
+    port: 25,
+    secure: false, // true for 465, false for other ports
+    tls: {
+      // Do not fail on invalid certs
+      rejectUnauthorized: false
+    }
+    */
     host: "smtp.office365.com", // Servidor SMTP de Outlook
     port: 587, // Puerto SMTP para Outlook
     secure: false,
@@ -13,12 +21,13 @@ async function transportCreate() {
       user: "pmxresp@outlook.com", // Correo electrónico del remitente
       pass: process.env.SECRET_MAIL_PASSWORD ?? "s0port3+Adm1n", // Contraseña del remitente
     },
+    
   });
 }
 async function sendEmail(to, subject, text) {
   // Opciones del mensaje de correo electrónico
   const mailOptions = {
-    from: "pmxresp@outlook.com", // Correo electrónico del remitente
+    //from: "pmxresp@outlook.com", // Correo electrónico del remitente
     to, // Correo electrónico del destinatario
     subject, // Asunto del correo electrónico
     text, // Cuerpo del correo electrónico

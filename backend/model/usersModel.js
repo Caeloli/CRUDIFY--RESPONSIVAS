@@ -14,6 +14,10 @@ const User = (sequelize) => {
         allowNull: false,
         unique: true,
       },
+      name: {
+        type: DataTypes.STRING(90),
+        allowNull: true,
+      },
       pswrd: {
         type: DataTypes.STRING(90),
         allowNull: true,
@@ -26,6 +30,10 @@ const User = (sequelize) => {
           model: "UserType",
           key: "user_type_id",
         },
+      },
+      is_active: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
       },
     },
     {

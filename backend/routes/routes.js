@@ -35,7 +35,7 @@ const { error, log } = require("console");
 const { default: axios } = require("axios");
 
 //const responsiveFileModel = require("../model/responsivefile.model")
-const salt = process.env.SALT;
+const salt = process.env.PMXRESP_SALT;
 //responsivefile.model.js
 //router.post("/crfile", responsiveFileModel.createResponsiveFile);
 //router.put("/urfile", responsiveFileModel.updateResponsiveFile);
@@ -59,7 +59,6 @@ const upload = multer({ storage: memoryStorage });
 /**
  * UserTypes
  */
-
 
 router.get("/usertype", async (req, res) => {
   try {
@@ -163,9 +162,11 @@ router.delete("/users/:id", async (req, res) => {
     const id = req.params.id;
     const user = await userController.getUser(id);
     if (user.user_type_id_fk === 1) {
-      const userDeleted = await userController.deleteUser(id);
+      const userDeleted = await userController.updateUser(user.user_id, {
+        is_active: false,
+      });
       return res.status(200).json({
-        message: `User deleted successfully with ID: ${userDeleted.user_id}`,
+        message: `User disabled successfully with ID: ${userDeleted.user_id}`,
       });
     } else {
       return res.status(404).json({
@@ -459,7 +460,7 @@ router.put("/responsive-file/:id", upload.single("file"), async (req, res) => {
           message: `Responsive cancelled with ID: ${result.resp_id}`,
           //${responsiveFileStored.resp_id}
         });
-      } else if(data.state_id_fk === 4){
+      } else if (data.state_id_fk === 4) {
         const result = await responsiveFileController.updateResponsiveFile(
           responsiveResult.resp_id,
           data
@@ -774,6 +775,47 @@ router.get("/authrequest", async (req, res) => {
   }
 });
 
+router.post("/authrequest/accept/:id", async (req, res) => {
+  console.log("ENTRA POR ACÁ AL MENOS? ");
+  try {
+    const id = req.params.id;
+    const authRequest = await authReqController.getAuthRequest(id);
+
+    //Insertion
+    if (authRequest.action_id_fk === 1) {
+      await userController.insertUser({
+        email: authRequest.affected_email,
+        name: authRequest.affected_name,
+        user_type_id_fk: 1,
+        is_active: true,
+      });
+    }
+    //Update
+    else if (authRequest.action_id_fk === 2) {
+      const user = await userController.getUserByEmail(
+        authRequest.affected_email
+      );
+      await userController.updateUser(user.user_id, {
+        is_active: true,
+      });
+    } else {
+      return res
+        .status(500)
+        .json({ message: "Internal server error with authrequest operation" });
+    }
+
+    await authReqController.deleteAuthRequest(authRequest.request_id);
+    return res
+      .status(200)
+      .json({ message: "Authrequest operation successfull" });
+  } catch (err) {
+    console.log("Error", err);
+    return res
+      .status(500)
+      .json({ message: "Internal server error with authrequest accept" });
+  }
+});
+
 router.put("/authrequest/:id", async (req, res) => {
   try {
     const id = req.params.id;
@@ -790,13 +832,13 @@ router.delete("/authrequest/:id", async (req, res) => {
     const id = req.params.id;
     const authRequest = await authReqController.deleteAuthRequest(id);
     return res.status(200).json({
-      message: `File deleted successfully with ID: ${authRequest.request_id}`,
+      message: `AuthRequest deleted successfully with ID: ${authRequest.request_id}`,
     });
   } catch (error) {
     console.log("Error", error);
     return res
       .status(500)
-      .json({ message: "Internal server error with email-notify" });
+      .json({ message: "Internal server error with authrequest deletion" });
   }
 });
 

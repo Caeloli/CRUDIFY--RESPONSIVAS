@@ -1,7 +1,9 @@
 const { default: axios } = require("axios");
 
-const notifAddress = "http://localhost:10333"; // "http://pmxresp-notifications-service"; //process.env.PMXRESP_NOTIFICATIONS_SERVICE_SERVICE_HOST ?? 
-const schedulerAddress =  "http://localhost:10335"; //"http://pmxresp-scheduler-service"; //process.env.PMXRESP_SCHEDULER_SERVICE_SERVICE_HOST ?? ;
+//const notifAddress = "http://localhost:10333"; 
+const notifAddress = "http://pmxresp-notifications-service"; //process.env.PMXRESP_NOTIFICATIONS_SERVICE_SERVICE_HOST ?? 
+//const schedulerAddress =  "http://localhost:10335"; //"http://pmxresp-scheduler-service"; //process.env.PMXRESP_SCHEDULER_SERVICE_SERVICE_HOST ?? ;
+const schedulerAddress =  "http://pmxresp-scheduler-service"; //process.env.PMXRESP_SCHEDULER_SERVICE_SERVICE_HOST ?? ;
 
 async function sendNotificationEmail(to, subject, text) {
   try {

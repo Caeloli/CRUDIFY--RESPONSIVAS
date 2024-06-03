@@ -30,9 +30,7 @@ export function Register() {
   };
 
   const handleSubmit = async (values, actions) => {
-    console.log("Envio de register");
     const result = await postRequestRegister({ ...values, userType });
-    console.log("resultado: ", result);
     if (!result.error) {
       return true; // Success
     } else {
