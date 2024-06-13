@@ -1,4 +1,4 @@
-const responsiveFileController = require("../controller/responsiveFileController");
+/*const responsiveFileController = require("../controller/responsiveFileController");
 async function checkExpirationDates() {
   try {
     // Fetch all responsive files from the database
@@ -29,3 +29,4 @@ async function checkExpirationDates() {
 module.exports = {
   checkExpirationDates,
 };
+*/

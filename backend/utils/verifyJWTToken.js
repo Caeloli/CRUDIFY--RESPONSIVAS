@@ -1,7 +1,7 @@
 const jwt = require("jsonwebtoken");
 require("dotenv").config();
 
-const sk = process.env.SK;
+const sk = process.env.PMXRESP_SK;
 
 const verifyToken = async (req, res, next) => {
   const token = req.headers.authorization?.split(" ")[1]; // Extract the token from the Authorization header

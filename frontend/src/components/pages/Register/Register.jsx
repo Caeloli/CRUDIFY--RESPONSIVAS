@@ -81,7 +81,6 @@ export function Register() {
                     "An error occurred during form submission:",
                     error
                   );
-                  // Handle error as needed, e.g., show an error modal
                 }
                 await setIsSubmit(false);
               }}

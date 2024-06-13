@@ -3,8 +3,6 @@ import axios from "axios";
 //const apiBase = "http://localhost"//"http://pmxresp-backend-service";//process.env.PMXRESP_BACKEND_SERVICE_SERVICE_HOST ?? "http://pmxresp-backend-service.ns-gsd-spar-qa01.svc.cluster.local" ?? "http://localhost";
 
 let apiBase = "http://172.19.70.24"; // Default API base URL
-console.log("apiBase: ", apiBase);
-
 
 const apiURL = `${apiBase}/pmx-resp`;
 

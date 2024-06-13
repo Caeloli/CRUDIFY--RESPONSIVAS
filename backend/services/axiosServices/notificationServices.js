@@ -15,10 +15,10 @@ async function sendNotificationEmail(to, subject, text) {
     console.log("Email sent successfully");
   } catch (error) {
     console.error(
-      "Error al enviar el correo electrónico de notificación:",
+      "Error while communicating with the service of notifications of Mail",
       error
     );
-    throw error; // Propagate the error to the caller
+    throw error; 
   }
 }
 
@@ -31,10 +31,10 @@ async function sendNotificationTelegram(chatID, text) {
     console.log("Telegram message sent successfully");
   } catch (error) {
     console.error(
-      "Error al enviar el mensaje telegram de notificación:",
+      "Error while communicating with the service of notifications of Telegram",
       error
     );
-    throw error; // Propagate the error to the caller
+    throw error; 
   }
 }
 
@@ -44,7 +44,7 @@ async function restartBotTelegram() {
     console.log("Telegram bot restart successfully");
   } catch(error){
     console.error(
-      "Error al enviar la petición de reinicio del bot de telegram"
+      "Error while communicating with the service of restart notifications bot"
     );
   }
 }
@@ -55,7 +55,7 @@ async function restartScheduler() {
     console.log("Scheduler restart successfully");
   } catch(error){
     console.error(
-      "Error al enviar la petición de reinicio del bot de telegram"
+      "Error while communicating with the service of restarting scheduler"
     );
   }
 }

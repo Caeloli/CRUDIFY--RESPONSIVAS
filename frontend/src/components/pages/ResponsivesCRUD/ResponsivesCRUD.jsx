@@ -279,7 +279,6 @@ function ResponsiveFilter({ column, table }) {
           isClearable
           placeholder={`Search... (${column.getFacetedUniqueValues().size})`}
           onChange={(value) => {
-            console.log("El valor que retorna es: ", value);
             column.setFilterValue(value);
           }}
           menuPosition="fixed"
@@ -492,7 +491,6 @@ export function ResponsivesCRUD() {
   };
 
   const handleGenerateXLXS = () => {
-    console.log("Data visible: ", downloadableData)
     return exportToExcelResponsivesCrud(downloadableData.current)
   }
 

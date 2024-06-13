@@ -36,9 +36,15 @@ export function ModalFileFormVisual({
           </Row>
           <Row className="mb-3">
             <Form.Label>Número de Formato</Form.Label>
+            <datalist id="format-list">
+              <option value="3"/>
+              <option value="4"/>
+            </datalist>
             <Form.Control
               type="number"
               name="format"
+              list="format-list"
+              autoCorrect="off"
               onChange={handleFormatChange}
             />
             {errorsDisplay.format && <p>{errorsDisplay.format}</p>}

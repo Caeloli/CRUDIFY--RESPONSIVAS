@@ -36,12 +36,9 @@ export function ServersTableView({
           {table.getHeaderGroups().map((headerGroup) => {
             return (
               <tr key={headerGroup.id}>
-                {/* You can place console.log or comments inside the map function */}
-                {/* This will generate a row for each header group */}
                 {headerGroup.headers.map((header) => {
                   return (
                     <th key={header.id} colSpan={header.colSpan}>
-                      {/* Conditional rendering based on header properties */}
                       {header.isPlaceholder ? null : (
                         <div
                           className={
@@ -58,7 +55,6 @@ export function ServersTableView({
                         >
                           <Row className="d-flex align-items-center justify-content-center">
                             <Col sm={8}>
-                              {/* Rendering header content */}
                               {flexRender(
                                 header.column.columnDef.header,
                                 header.getContext()
@@ -68,7 +64,6 @@ export function ServersTableView({
                           </Row>
                         </div>
                       )}
-                      {/* Optionally render filter input */}
                       {header.column.getCanFilter() ? (
                         <div>
                           {FilterComponent ? (

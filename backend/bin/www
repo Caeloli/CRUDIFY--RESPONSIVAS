@@ -1,9 +1,4 @@
 #!/usr/bin/env node
-
-/**
- * Module dependencies.
- */
-
 const app = require("../app");
 const debug = require("debug")("backend:server");
 
@@ -94,7 +89,7 @@ function onError(error) {
 
   const bind = typeof port === "string" ? "Pipe " + port : "Port " + port;
 
-  // handle specific listen errors with friendly messages
+  // handle specific listen errors
   switch (error.code) {
     case "EACCES":
       console.error(bind + " requires elevated privileges");

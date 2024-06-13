@@ -24,7 +24,6 @@ export function ResetPassword() {
         setNewAccessKeyMessage(resetPasswordRequest.message);
       }
     };
-    console.log("Token: ", token);
     resetPasswordFetch();
   }, [token]);
 

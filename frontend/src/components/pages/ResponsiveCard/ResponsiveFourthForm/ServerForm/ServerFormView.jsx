@@ -16,7 +16,6 @@ export function ServerFormView({
     <Formik
       validationSchema={schema}
       onSubmit={(values, actions) => {
-        console.log("Se llama a request");
       }}
       initialValues={initialValues}
     >

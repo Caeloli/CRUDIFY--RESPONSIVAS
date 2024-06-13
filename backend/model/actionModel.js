@@ -10,7 +10,7 @@ const Actions = (sequelize) => {
         autoIncrement: true,
       },
       description: {
-        type: DataTypes.STRING(10), // Adjust the length as needed
+        type: DataTypes.STRING(10),
         allowNull: false,
       },
     },

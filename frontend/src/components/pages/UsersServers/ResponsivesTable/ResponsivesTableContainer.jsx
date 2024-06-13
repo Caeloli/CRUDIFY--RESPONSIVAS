@@ -19,6 +19,7 @@ import {
 } from "@tanstack/match-sorter-utils";
 import { DebouncedInput } from "../../../common/Tables/Filters/Inputs/DebouncedInput";
 import { DebouncedSelect } from "../../../common/Tables/Filters/Inputs/DebouncedSelect";
+import { Link } from "react-router-dom";
 
 const fuzzyFilter = (row, columnId, value, addMeta) => {
   const itemRank = rankItem(row.getValue(columnId), value);
@@ -70,9 +71,24 @@ export function ResponsivesTableContainer({
       ),
     },
     {
-      accessorFn: (row) => row.remedy,
+      accessorFn: (row) => row,
       id: "remedy",
-      cell: (info) => info.getValue(),
+      cell: (info) => (
+        <Link
+          style={{ color: "#000000", textDecoration: "underlined" }}
+          to={
+            info.getValue().file_format === 3
+              ? `/FilesThirdForm/${info.getValue().resp_id}`
+              : info.getValue().file_format === 4
+              ? `/FilesFourthForm/${info.getValue().resp_id}`
+              : null
+          }
+          target="_blank"
+
+        >
+          {info.getValue().remedy}
+        </Link>
+      ),
       header: () => <span>Remedy</span>,
     },
     {
@@ -233,7 +249,6 @@ function ResponsiveTableFilter({ column, table }) {
           className={"mt-2"}
           placeholder={`Search... (${column.getFacetedUniqueValues().size})`}
           onChange={(value) => {
-            console.log("El valor que retorna es: ", value);
             column.setFilterValue(value);
           }}
           menuPosition="fixed"

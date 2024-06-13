@@ -16,7 +16,6 @@ export function AuthorizationContainer() {
     const fetchData = async () => {
       try {
         const authRequest = await getAllAuthRequestData();
-        console.log("Auth Request: ", authRequest);
         setAuthData(authRequest);
       } catch (error) {
         console.error("Error fetch auth data", error);
@@ -91,13 +90,11 @@ export function AuthorizationContainer() {
   ]);
 
   const handleDenyRequest = async (id) => {
-    console.log("VALOR:", id);
     const result = await deleteAuthRequest(id);
     setUpdate(!update);
   };
 
   const handleAcceptRequest = async (id) => {
-    console.log("VALOR:", id);
     const result = await acceptAuthRequest(id);
     setUpdate(!update);
   };

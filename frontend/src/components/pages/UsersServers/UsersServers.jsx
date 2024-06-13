@@ -63,8 +63,6 @@ export function UserServers() {
     if (!!serverData) {
       const filteredF3Data = serverData.filter((server) => !!server.hostname);
       const filteredF4Data = serverData.filter((server) => !!server.brand);
-      console.log("LA F3: ", filteredF3Data);
-      console.log("LA F4: ", filteredF4Data);
       setServerF3Data(filteredF3Data);
       setServerF4Data(filteredF4Data);
     }
@@ -91,9 +89,6 @@ export function UserServers() {
     responsiveData,
     serverData
   ) => {
-    console.log("UserData: ", userData);
-    console.log("ResponsiveData: ", responsiveData);
-    console.log("ServerData: ", serverData);
     const joinedData = userData.flatMap((user) =>
       responsiveData
         .filter(
@@ -123,7 +118,6 @@ export function UserServers() {
       responsiveDownloadableData.current,
       serverData
     );
-    console.log("Data unida: ", joinedData);
     exportToExcelGeneralPanel(joinedData);
   };
 

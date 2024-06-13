@@ -72,7 +72,6 @@ export function ResponsiveFourthFormView({
     setServers((prevServers) => [...prevServers, newServer]);
   };*/
 
-  console.log("Users Data: ", usersServersValues);
 
   return (
     <>

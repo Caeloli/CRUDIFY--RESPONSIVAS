@@ -300,12 +300,18 @@ export function ResponsiveThirdFormView({
                               controlId={`validationFormikDomain.${index}`}
                             >
                               <Form.Label>Dominio</Form.Label>
+                              <datalist id="domain-list">
+                                  <option value="un"/>
+                                  <option value="pemex"/>
+                              </datalist>
                               <Form.Control
                                 type="text"
                                 placeholder="Dominio"
                                 name={`servers.${index}.domain_server`}
                                 value={server.domain_server}
                                 disabled={isSubmit || isReadMode}
+                                list="domain-list"
+                                autoComplete="off"
                                 onChange={handleChange}
                                 isInvalid={
                                   touched.servers?.[index]?.domain_server &&

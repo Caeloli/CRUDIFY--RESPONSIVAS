@@ -1,3 +1,4 @@
+/*
 const generatePassword = require("generate-password");
 const bcrypt = require("bcrypt");
 
@@ -10,12 +11,10 @@ const salt = process.env.PMXRESP_SALT;
 
 const checkAuthRequest = async (requestId) => {
   try {
-    console.log("Validating the request");
     const authAllows = await authAllowController.getAllAuthAllowByRequestId(
       requestId
     );
     let isAllowed = true;
-    console.log("Looping through the method");
     for (const authAllow of authAllows) {
       if (!authAllow.is_allowed) {
         isAllowed = false;
@@ -73,3 +72,4 @@ const checkAuthRequest = async (requestId) => {
 module.exports = {
   checkAuthRequest,
 };
+*/

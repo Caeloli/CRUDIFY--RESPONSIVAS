@@ -1,6 +1,5 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { ModalFileFormVisual } from "./ModalFileFormVisual";
-import { extractPdfText } from "../../../../func/pdfExtractor";
 import { getFileData } from "../../../../services/api";
 
 export function ModalFileFormContainer({
@@ -26,16 +25,13 @@ export function ModalFileFormContainer({
 
   const handleProcessing = async () => {
     const errors = await validateFile();
-    console.log("Entra a que se procese. Errores fueron: ", errors);
     if (Object.keys(errors).length !== 0) {
       setErrors(errors);
       return;
     } else {
-      console.log("Procesando archivo", file);
       const formData = new FormData();
       formData.append("file", file);
       formData.append("data", JSON.stringify({ formatData: format }));
-      console.log("El formdata es: ", formData);
       const result = await getFileData(formData);      
       if (result) {
         handleAutoResponsive({ ...result, file: file, file_format: format });

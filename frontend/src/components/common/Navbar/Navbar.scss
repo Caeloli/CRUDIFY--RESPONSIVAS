@@ -1,22 +1,19 @@
 @import "../../../assets/styles/variables.scss";
 @import "../../../assets/styles/mixins.scss";
 
-a{
-    text-decoration: none !important;
-    color: aliceblue !important;
-}
-
 .nav-item{
     height: 40px;
     display: flex;
     align-items: center;
     &:hover{
         a{
-            color: red !important;
+            color: $subtitles-color ;
         }
     }
     a{
         transition: all 0.2s ease-in-out;
+        text-decoration: none ;
+        color: aliceblue ;
     }
 }
 

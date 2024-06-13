@@ -20,10 +20,10 @@ const botQueue = new Queue({
     console.log("E-Mail Transport created succesfully");
   } catch (error) {
     console.error("Error while creating the e-mail transport: ", error);
-    process.exit(1); // Salir del proceso con un código de error
+    process.exit(1); // Exit the process with a code error
   }
 })();
-// Middleware para analizar solicitudes JSON
+// Middleware to analyze requests JSON
 app.use(logger("dev"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
@@ -36,17 +36,13 @@ app.post("/send-email", async (req, res) => {
   try {
     let recipients;
     if (Array.isArray(to)) {
-      
       recipients = to.join(", ");
     } else {
       
       recipients = to;
     }
-
-    
     await emailQueue.add(async () => {
       console.log("Sending mail to: ", recipients);
-
       await mail.sendEmail(recipients, subject, text);
     });
 

@@ -9,6 +9,11 @@ const backendDir = "/pmx-resp";
 const EMAIL_INPUT = 0;
 let bot;
 
+
+/**
+ * emailDataWizard - DEPRECATED  
+ */
+/*
 const emailDataWizard = new Scenes.WizardScene(
   "EMAIL_DATA_WIZARD_SCENE_ID",
   // Step 1
@@ -90,7 +95,7 @@ const emailDataWizard = new Scenes.WizardScene(
     return ctx.scene.leave();
   }
 );
-
+*/
 async function sendNotification(
   text,
   chat_id = process.env.TELEGRAM_CHAT_GROUP_ID,
@@ -110,7 +115,6 @@ async function sendNotification(
 }
 
 async function start(ctx) {
-  console.log("La consola recibió esta notif start");
   await ctx.reply("I'm a bot, please talk to me!");
 }
 
@@ -127,7 +131,7 @@ async function cancel(ctx) {
 
 async function startBot() {
   try {
-    const stage = new Scenes.Stage([emailDataWizard]);
+    //const stage = new Scenes.Stage([emailDataWizard]);
     const loginResponse = await axios.post(`${backendPostgresql}/login`, {
       user: "pmxresp@outlook.com",
       password: "s0port3+Adm1n",
@@ -145,12 +149,12 @@ async function startBot() {
 
     bot = new Telegraf(tokenBot);
     bot.use(session());
-    bot.use(stage.middleware());
+    //bot.use(stage.middleware());
     bot.command("start", start);
     bot.command("send", send_to_groups);
-    bot.command("register", (ctx) =>
+    /*bot.command("register", (ctx) =>
       ctx.scene.enter("EMAIL_DATA_WIZARD_SCENE_ID")
-    );
+    );*/
     bot.launch();
     console.log("Bot started succesfully")
   } catch (error) {

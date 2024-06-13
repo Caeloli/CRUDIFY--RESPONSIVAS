@@ -40,6 +40,7 @@ const createClientLDAP = async () => {
   return client;
 };
 
+//Look for user using mail of the user
 const searchUserLDAP = async (identifier) => {
   const client = await createClientLDAP();
   try {
@@ -50,6 +51,7 @@ const searchUserLDAP = async (identifier) => {
     };
 
     return new Promise((resolve, reject) => {
+      //Authenticate system user in order to search into the active directory
       client.bind(ldapConfig.username, ldapConfig.password, (err) => {
         if (err) {
           console.error("Software authentication error");
@@ -57,37 +59,35 @@ const searchUserLDAP = async (identifier) => {
         }
 
         console.log("Start search for user:", identifier);
-        client.search(
-          ldapConfig.userSearchBase,
-          opts,
-          (err, res) => {
-            if (err) {
-              console.error("User search error:", err.message);
-              return reject(err);
-            }
-
-            let userInfo = null;
-            res.on("searchEntry", (entry) => {
-              userInfo = {
-                objectName: entry.pojo.objectName,
-                attributes: entry.attributes.reduce((acc, attribute) => {
-                  acc[attribute.type] = attribute.values[0];
-                  return acc;
-                }, {}),
-              };
-            });
-
-            res.on("error", (err) => {
-              console.error("User search error:", err.message);
-              return reject(err);
-            });
-
-            res.on("end", (result) => {
-              console.log("status:", result.status);
-              resolve(userInfo);
-            });
+        client.search(ldapConfig.userSearchBase, opts, (err, res) => {
+          if (err) {
+            console.error("User search error:", err.message);
+            return reject(err);
           }
-        );
+
+          let userInfo = null;
+
+          //Return entry of the user if it is found
+          res.on("searchEntry", (entry) => {
+            userInfo = {
+              objectName: entry.pojo.objectName,
+              attributes: entry.attributes.reduce((acc, attribute) => {
+                acc[attribute.type] = attribute.values[0];
+                return acc;
+              }, {}),
+            };
+          });
+
+          res.on("error", (err) => {
+            console.error("User search error:", err.message);
+            return reject(err);
+          });
+
+          res.on("end", (result) => {
+            console.log("status:", result.status);
+            resolve(userInfo);
+          });
+        });
       });
     });
   } finally {
@@ -95,6 +95,7 @@ const searchUserLDAP = async (identifier) => {
   }
 };
 
+//Authenticate the user with their credentials
 const bindUserLDAP = async (userInfo, password) => {
   const client = await createClientLDAP();
   try {
@@ -105,7 +106,10 @@ const bindUserLDAP = async (userInfo, password) => {
           return reject(err);
         }
 
-        console.log("Successful authentication with user:", userInfo.attributes.mail);
+        console.log(
+          "Successful authentication with user:",
+          userInfo.attributes.mail
+        );
         resolve();
       });
     });

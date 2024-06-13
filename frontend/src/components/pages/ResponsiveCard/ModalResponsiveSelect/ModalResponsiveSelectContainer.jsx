@@ -263,7 +263,6 @@ function ResponsiveFilter({ column, table }) {
           isClearable
           placeholder={`Search... (${column.getFacetedUniqueValues().size})`}
           onChange={(value) => {
-            console.log("El valor que retorna es: ", value);
             column.setFilterValue(value);
           }}
           styles={{

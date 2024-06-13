@@ -20,29 +20,16 @@ const notificatioDataController = require("../controller/notificationDataControl
 const authServices = require("../services/authServices");
 const responsiveServices = require("../services/responsiveServices");
 const utils = require("../utils/functions");
-//const {
-//  updateTelegramBotToken,
-//  updateTelegramChatId,
-//  updateNotificationTime,
-//} = require("../config");
-//const { sendNotification, startBot } = require("../services/bot/tbot");
-
 const {
   postgreSQLUpdateResponsiveNotficationsState,
 } = require("../services/dbServices");
 const globals = require("../config/globalVariables");
-const { error, log } = require("console");
-const { default: axios } = require("axios");
+const { error } = require("console");
 
-//const responsiveFileModel = require("../model/responsivefile.model")
+
 const salt = process.env.PMXRESP_SALT;
-//responsivefile.model.js
-//router.post("/crfile", responsiveFileModel.createResponsiveFile);
-//router.put("/urfile", responsiveFileModel.updateResponsiveFile);
-//router.get("/grfile", responsiveFileModel.readResponsiveFile);
-//router.get("/garfile", responsiveFileModel.readAllResponsiveFiles)
-//router.delete("/drfile", responsiveFileModel.deleteResponsiveFile);
 
+//Generate a temp disk storage for MULTER
 const diskStorage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, path.join(__dirname, "..", "uploads", "responsive"));
@@ -51,13 +38,12 @@ const diskStorage = multer.diskStorage({
     cb(null, file.originalname);
   },
 });
-
 const memoryStorage = multer.memoryStorage();
-
 const upload = multer({ storage: memoryStorage });
 
 /**
  * UserTypes
+ * GET:     /usertype: Read all usertypes from db
  */
 
 router.get("/usertype", async (req, res) => {
@@ -74,16 +60,16 @@ router.get("/usertype", async (req, res) => {
 });
 
 /**
- * Users
+ * USERS
+ * POST:    /users: Create a new user in db - DEPRECATED
+ * GET:     /users: Read all users from db
+ * DELETE:  /users/:id: Update is_active column to false in db
  */
 
 router.post("/users", async (req, res) => {
   try {
-    console.log("SALT: ", salt);
     const data = req.body;
     const { pswrd } = data;
-    console.log("DATA: ", data);
-    console.log("PSWRD: ", pswrd);
     const hash = await bcrypt.hash(pswrd, salt);
     const userStored = userController.insertUser({ ...data, pswrd: hash });
     return res.status(200).json({
@@ -182,7 +168,8 @@ router.delete("/users/:id", async (req, res) => {
 });
 
 /**
- * Actions
+ * ACTIONS
+ * GET:     /actions: Read all actions from db
  */
 
 router.get("/actions", async (req, res) => {
@@ -199,7 +186,7 @@ router.get("/actions", async (req, res) => {
 });
 
 /**
- * Audit Log
+ * AUDITLOG - DEPRECATED
  */
 
 router.get("/auditlog", async (req, res) => {
@@ -253,8 +240,14 @@ router.put("/auditlog", async (req, res) => {
   }
 });
 */
+
 /**
- * Responsive Files
+ * RESPONSIVEFILES
+ * POST:      /responsive-file: Create new ResponsiveFile, File, Servers, UserServers in db.
+ * PUT:       /responsive-file/:id: Update ResponsiveFile, File, Servers, UserServers in db.
+ * GET:       /responsive-file/:id: Read a single ResponsiveFile and File, Servers, UserServers associated in db through resp_id
+ * GET:       /responsive-file: Read all ResponsiveFiles in db
+ * DELETE:    /responvie-file/:id: Delete a ResponsiveFile in DB - DEPRECATED
  */
 
 router.post("/responsive-file", upload.single("file"), async (req, res) => {
@@ -375,7 +368,6 @@ router.post("/responsive-file", upload.single("file"), async (req, res) => {
           ip_address: server.ip_address,
           responsive_file_id_fk: responsiveResult.resp_id,
         });
-        // Handle serverStored if needed
       }
     };
 
@@ -388,7 +380,6 @@ router.post("/responsive-file", upload.single("file"), async (req, res) => {
           location: server.location,
           responsive_file_id_fk: responsiveResult.resp_id,
         });
-        // Handle serverStored if needed
       }
     };
 
@@ -433,13 +424,10 @@ router.put("/responsive-file/:id", upload.single("file"), async (req, res) => {
      *
      */
 
-    console.log("Se llama a data update");
     const id = req.params.id;
     const file = req.file;
     console.log("req: ", req.body.data);
     const data = JSON.parse(req.body.data);
-    console.log("DATA UPDATE: ", data);
-    console.log("FILE UPDATE: ", file);
     const user_id = req.user_id;
 
     const responsiveResult = await responsiveFileController.getResponsiveFile(
@@ -533,10 +521,7 @@ router.put("/responsive-file/:id", upload.single("file"), async (req, res) => {
       });
     }
 
-    //Update before and after responsive_id from OLD responsives
-    console.log("ResponsiveFilesdasdsaads: ", responsiveResult);
     if (!!responsiveResult.before_resp_id_fk)
-      console.log("SE ACTUALIZA EL BEFORE");
     responsiveFileController.updateResponsiveFile(
       responsiveResult.before_resp_id_fk,
       {
@@ -617,20 +602,21 @@ router.put("/responsive-file/:id", upload.single("file"), async (req, res) => {
 router.get("/responsive-file/:id", async (req, res) => {
   try {
     const id = req.params.id;
-    const responsiveFile = await responsiveFileController.getResponsiveFile(id);
-
+    const responsiveFile = await responsiveFileController.getResponsiveFile(id); // Retrieve the responsive file data using the ID
+    // If the responsive file exists, fetch related data
     if (responsiveFile) {
-      const servers = await serverController.getServersByRespIDFK(
+      const servers = await serverController.getServersByRespIDFK( // Retrieve servers data associated with responsive file just retrieved
         responsiveFile.resp_id
       );
-      const usersServers = await userServerController.getUserServer(
+      const usersServers = await userServerController.getUserServer( // Retrieve user servers data associated with the responsive file
         responsiveFile.user_servers_id_fk
       );
-      const serversArray = servers.map((server) => server.dataValues);
+      const serversArray = servers.map((server) => server.dataValues);// Map the servers data to extract data values      
+      // Send a JSON response containing the responsive file data, servers data, and user servers data
       return res.json({
-        ...responsiveFile.dataValues,
-        servers: serversArray || [],
-        ...usersServers.dataValues,
+        ...responsiveFile.dataValues, // Spread responsive file data values
+        servers: serversArray || [], // Include servers data or an empty array if none
+        ...usersServers.dataValues, // Spread user servers data values
       });
     } else {
       return res.status(404).json({
@@ -638,12 +624,15 @@ router.get("/responsive-file/:id", async (req, res) => {
       });
     }
   } catch (error) {
+    // Log any errors that occur
     console.log("Error", error);
+    // Send an internal server error response to the client
     return res
       .status(500)
-      .json({ message: "Internal server error with responsivefiles" });
+      .json({ message: "Internal server error with responsive files" });
   }
 });
+
 
 router.get("/responsive-file", async (req, res) => {
   try {
@@ -661,16 +650,13 @@ router.get("/responsive-file", async (req, res) => {
 router.delete("/responsive-file/:id", async (req, res) => {
   try {
     const id = req.params.id;
-
-    // Actualizas estado de resposniva para eliminar
-
-    const responsiveFile = await responsiveFileController.updateResponsiveFile(
+    const responsiveFile = await responsiveFileController.updateResponsiveFile( // Update state of responsives that are about to be deleted
       id,
       {
         state_id_fk: 5,
       }
     );
-    //Genera instancia en auditlog
+    //Auditlog instance
     await auditLogController.insertAuditLog({
       file_id_fk: responsiveFile.resp_id,
       user_id_fk: globals.adminUser.user_id, //modify_user_id
@@ -678,7 +664,7 @@ router.delete("/responsive-file/:id", async (req, res) => {
       date: new Date().getTime(),
     });
 
-    // En scheduler se debe eliminar la responsiva
+    //In scheduler the responsive must be deleted
     /*const responsiveFile = await responsiveFileController.deleteResponsiveFile(
       id
     );*/
@@ -694,7 +680,8 @@ router.delete("/responsive-file/:id", async (req, res) => {
 });
 
 /**
- * States
+ * STATES
+ * GET:     /states: Read all states in db
  */
 
 router.get("/states", async (req, res) => {
@@ -711,7 +698,7 @@ router.get("/states", async (req, res) => {
 });
 
 /**
- * Authorization Allow
+ * AUTHORIZATION_ALLOW - DEPRECATED
  */
 
 router.get("/authallow", async (req, res) => {
@@ -732,7 +719,6 @@ router.put("/authallow/:id", async (req, res) => {
     const id = req.params.id;
     const data = req.body;
     const authAllow = await authAllowController.updateAuthAllow(id, data);
-    console.log("AuthAllow con boolean: ", authAllow.is_allowed);
     await authServices.checkAuthRequest(authAllow.request_id_fk);
     return res.status(200).json({
       message: `AuthAllow updated successfully with ID: ${authAllow.allow_id}`,
@@ -750,7 +736,6 @@ router.get("/authallow/user", utils.verifyToken, async (req, res) => {
     const authAllow = await authAllowController.getAuthAllowByUserId(
       req.user_id
     );
-    console.log(authAllow);
     return res.status(200).json(authAllow);
   } catch (error) {
     console.log("Error", error);
@@ -759,8 +744,12 @@ router.get("/authallow/user", utils.verifyToken, async (req, res) => {
       .json({ message: "Internal server error with authRequest" });
   }
 });
-/**
- * Authorization Request
+/*
+ * AUTHORIZATION_REQUEST
+ * POST:      /authrequest/accept/:id: Update status of a user into db if it exists or insert a new one into db if it does not exist
+ * PUT:       /authrequest/:id: Update authrequest in db
+ * GET:       /authrequest: Get all authrequests in db
+ * DELETE:    /authrequest/:id: Delete an authRequests in db
  */
 
 router.get("/authrequest", async (req, res) => {
@@ -776,7 +765,6 @@ router.get("/authrequest", async (req, res) => {
 });
 
 router.post("/authrequest/accept/:id", async (req, res) => {
-  console.log("ENTRA POR ACÁ AL MENOS? ");
   try {
     const id = req.params.id;
     const authRequest = await authReqController.getAuthRequest(id);
@@ -843,7 +831,7 @@ router.delete("/authrequest/:id", async (req, res) => {
 });
 
 /**
- * Register
+ * REGISTER - DEPRECATED
  */
 
 router.post("/authrequest/register", async (req, res) => {
@@ -869,7 +857,9 @@ router.post("/authrequest/register", async (req, res) => {
 });
 
 /**
- * Servers
+ * SERVERS 
+ * POST:      /servers: Update status of a user into db if it exists or insert a new one into db if it does not exist
+ * GET:       /servers: Get all authrequests in db
  */
 
 router.post("/servers", async (req, res) => {
@@ -898,7 +888,9 @@ router.get("/servers", async (req, res) => {
 });
 
 /**
- * User Servers
+ * USER_SERVERS
+ * POST:      /user-servers: Inser new userservers in db
+ * GET:       /user-servers: Get all userservers in db
  */
 
 router.post("/user-servers", async (req, res) => {
@@ -928,25 +920,21 @@ router.get("/user-servers", async (req, res) => {
 
 /**
  * PDF Store
+ * POST:      /responsive-file/pdf/data: Get data from PDF automatically
+ * GET:       /responsive-file/pdf/:id: Get pdf file from db
  */
 
 router.get("/responsive-file/pdf/:id", async (req, res) => {
   try {
     const id = req.params.id;
-    console.log("El ID es:", id);
     const file = await fileController.getFileByRespIDFK(id);
     if (file) {
-      console.log("El file es:", file);
-      console.log("El contenido del archivo es. ", file.file_content);
-
       res.setHeader("Content-Type", "application/pdf");
       res.setHeader(
         "Content-Disposition",
         `attachment; filename="${file.file_original_name}"`
-      ); // Optionally, specify filename for download
-
-      // Send file content as response
-      res.send(file.file_content);
+      ); // Specify filename for download
+      res.send(file.file_content); // Send file content as response
     } else {
       return res.status(404).json({
         message: "Responsive File not found",
@@ -962,30 +950,25 @@ router.get("/responsive-file/pdf/:id", async (req, res) => {
 
 router.post(
   "/responsive-file/pdf/data",
-  upload.single("file"),
+  upload.single("file"), // Middleware to handle file upload (single file)
   async (req, res) => {
     try {
       const file = req.file;
       const { formatData } = JSON.parse(req.body.data);
-      console.log("File is: ", file);
-      console.log("Data is: ", formatData);
-      const result = await utils.getDataFromPDF(formatData, file);
-
-      const userServer = await userServerController.getUserServerByName(
-        result.user_name
-      );
+      const result = await utils.getDataFromPDF(formatData, file);// Extract data from the PDF file using the provided format
+      const userServer = await userServerController.getUserServerByName(result.user_name); // Fetch user server information based on the user name extracted from the PDF
+      // If user server information is found, add  ID to the result
       if (userServer) {
         result.user_server_id = userServer.user_server_id;
       }
       return res.status(200).json(result);
     } catch (error) {
       console.log("Error", error);
-      return res
-        .status(500)
-        .json({ message: "Internal server error with responsivefiles" });
+      return res.status(500).json({ message: "Internal server error with responsive files" });
     }
   }
 );
+
 
 router.get("/notification/bot", async (req, res) => {
   try {

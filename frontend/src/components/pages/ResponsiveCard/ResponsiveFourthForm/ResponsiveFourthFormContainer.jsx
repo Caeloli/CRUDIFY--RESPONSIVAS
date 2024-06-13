@@ -92,7 +92,6 @@ export function ResponsiveFourthFormContainer({
   });
 
   const handleSubmit = async (values, actions) => {
-    console.log("Values", values);
     /*
     const formData = new FormData();
     const data = Object.keys(values).reduce((acc, key) => {
@@ -119,13 +118,11 @@ export function ResponsiveFourthFormContainer({
   };
 
   const handleFileChange = (evt) => {
-    console.log("El archivo es: ", evt.target.files[0]);
     setPreviewFile(evt.target.files[0]);
     setFile(evt.target.files[0]);
   };
 
   const handleAutoResponsive = (data) => {
-    console.log("Se llama a gandleAutoResponsive con los datos de", data.file);
     setInitialValues({
       resp_id: "",
       remedy: data.remedy,

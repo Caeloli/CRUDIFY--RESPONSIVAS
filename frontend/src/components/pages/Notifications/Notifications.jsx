@@ -59,7 +59,6 @@ export function Notifications() {
   const handleAPIBotSubmit = async (values, actions) => {
 
     if (await verifyTelegramToken(values.bot_id)) {
-      //console.log("El bot sí existe");
       const result = await putNotificationBot(values);
       if (!result.error) {
         return true; // Success

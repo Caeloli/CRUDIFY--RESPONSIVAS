@@ -1,10 +1,8 @@
 const express = require("express");
 const cors = require("cors");
 const path = require("path");
-const generatePassword = require("generate-password");
 require("dotenv").config();
 const cookieParser = require("cookie-parser");
-const axios = require("axios");
 const jwt = require("jsonwebtoken");
 const logger = require("morgan");
 const config = require("./config/index").configPort();
@@ -13,22 +11,21 @@ const routes = require("./routes/routes");
 const app = express();
 const bcrypt = require("bcrypt");
 const userController = require("./controller/usersController");
-const resetTokenController = require("./controller/resetTokenController");
 const { verifyToken } = require("./utils/verifyJWTToken");
 const notificationServices = require("./services/axiosServices/notificationServices");
 const authReqController = require("./controller/authorizationRequestController");
 const globals = require("./config/globalVariables");
-const router = require("./routes/routes");
-const crypto = require("crypto");
 const { authenticateUserLDAP } = require("./services/authenticationService");
 
 const salt = process.env.PMXRESP_SALT;
 const sk = process.env.PMXRESP_SK;
-const notifAddress = process.env.NOTIFICATIONS_ADDRESS;
+
 
 (async () => {
   try {
+    //Database connection using sequelize
     const db = await require("./config/database/sequelize");
+    //Once sequelize is ready, launch the whole application
     while (!db || !db.resetToken) {
       console.log("Waiting for sequelize database connection...");
       await new Promise((resolve) => setTimeout(resolve, 1000)); 
@@ -68,15 +65,25 @@ const notifAddress = process.env.NOTIFICATIONS_ADDRESS;
     //app.use(express.static(path.join(__dirname, "public")));
     app.use(express.static("build"));
 
-    app.post("/login", async (req, res) => {
-      const { user, password } = req.body;
 
+    /**
+     * LOGIN
+     * POST: /login: Route for user login
+     */
+    app.post("/login", async (req, res) => {
+
+      const { user, password } = req.body;
       try {
+        console.log("ADMIN USER:", user, globals.adminUser.email, user.trim() !== globals.adminUser.email);
         if (user.trim() !== globals.adminUser.email) {
+          //LDAP Authentication for users
           const resultLDAP = await authenticateUserLDAP(user, password);
+
           if (resultLDAP) {
+            //Check if user is in database and is an active user
             const userStored = await userController.getUserByEmail(user);
             if (userStored && userStored.is_active === true) {
+              //JWT Token creation
               const token = jwt.sign(
                 {
                   user_id: userStored.user_id,
@@ -90,7 +97,8 @@ const notifAddress = process.env.NOTIFICATIONS_ADDRESS;
               );
               return res.status(200).json(token);
             } else {
-              
+              //If not stored or not an active user ->
+              //Generate a signupRequest if not already generated
               const signupRequests =
                 await authReqController.getAllAuthRequest();
               const signupPetitionFromUser = signupRequests.filter(
@@ -121,6 +129,10 @@ const notifAddress = process.env.NOTIFICATIONS_ADDRESS;
                     }
                   );
                 }
+
+                //Get mails of admin users and 
+                //send a notification to mails of adminUsers 
+                //showing that a new user is trying to access the software
                 const users = await userController.getAllUsers();
                 const adminUsers = users.filter(
                   (user) => user.user_type_id_fk == 2 && user.is_active === true
@@ -141,7 +153,6 @@ const notifAddress = process.env.NOTIFICATIONS_ADDRESS;
                 return res.status(409).json({ message: "Your petition is already submitted" });    
               }
             }
-            //If not, assign new request for registering a new user
           } else {
             return res.status(401).json({ message: "Incorrect credentials" });
           }
@@ -174,81 +185,18 @@ const notifAddress = process.env.NOTIFICATIONS_ADDRESS;
             return res.status(401).json({ message: "Incorrect credentials" });
           }
         }
-        /*
-        //const hashedPassword = await bcrypt.hash(password, salt);
-        const userStored = await userController.getUserByEmail(user);
-
-        if (!userStored) {
-          return res.status(404).json({ message: "User not found" });
-        }
-
-        const passwordMatch = await bcrypt.compare(password, userStored.pswrd);
-        console.log("PM", passwordMatch);
-        if (passwordMatch) {
-          const token = jwt.sign(
-            {
-              user_id: userStored.user_id,
-              email: userStored.email,
-              user_type: userStored.user_type_id_fk,
-            },
-            sk,
-            {
-              expiresIn: "1hr",
-            }
-          );
-          return res.status(200).json(token);
-        } else {
-          return res.status(401).json({ message: "Incorrect credentials" });
-        }
-        */
+        
       } catch (error) {
         console.error("Error during login:", error);
         return res.status(500).json({ message: "Internal server error" });
       }
     });
 
-    /*app.post("/register", async (req, res) => {
-      try {
-        const email = req.body.email;
-        const userType = parseInt(req.body.userType);
-        if (userType !== 1 && userType !== 2) {
-          throw new Error("UserType is not defined");
-        }
-
-        const authRequest = await authReqController.insertAuthRequest({
-          user_id_fk: globals.adminUser.user_id,
-          action_id_fk: 1,
-          request_date: new Date().getTime(),
-          affected_email: email,
-          affected_type: userType,
-        });
-
-        const users = await userController.getAllUsers();
-        const adminUsers = users.filter((user) => user.user_type_id_fk == 2);
-        adminUsers.map((adminUser) => {
-          notificationServices.sendNotificationEmail(
-            adminUser.email,
-            `Solicitud de inscripción de usuario: ${email}`,
-            `Se solicita a un administrador confirmar o denegar el permiso de inscripción para el usuario con el correo electrónico ${email} con permisos de ${
-              userType == 1
-                ? "Operador"
-                : userType == 2
-                ? "Administrador"
-                : "Desconocido"
-            }. Por favor, tome las medidas necesarias para procesar esta solicitud.`
-          );
-        });
-
-        console.log("Registro exitoso", email, userType);
-        return res.status(200).json({
-          message: `Post authRequest successfully with ID: ${authRequest?.request_id}`,
-        });
-      } catch (error) {
-        console.error("Error during registering: ", error);
-        return res.status(500).json({ message: "Internal server error" });
-      }
-    }); */
-
+   
+    /**
+     * JWT TOKEN
+     * GET: /verify-token: Verify if JWT token is active
+     */
     app.get("/verify-token", async (req, res) => {
       const token = req.headers.authorization?.split(" ")[1]; // Extract the token from the Authorization header
       if (!token) {
@@ -266,6 +214,10 @@ const notifAddress = process.env.NOTIFICATIONS_ADDRESS;
       }
     });
 
+    /**
+     * ACTIVE
+     * GET: /active: Check if server is active
+     */
     app.get("/active", async (req, res) => {
       try {
         return res.status(200).json({
@@ -287,221 +239,11 @@ const notifAddress = process.env.NOTIFICATIONS_ADDRESS;
       }
     });
 
-    /* app.post("/forgot-password", async (req, res) => {
-      try {
-        const { email } = req.body;
-        const user = await userController.getUserByEmail(email);
-        if (!user) {
-          return res
-            .status(404)
-            .json({ message: "Su usuario no fue encontrado." });
-        }
-        //Verify is mail doesn't have an active link
-
-        const resetTokens = await resetTokenController.getAllResetTokenByUserId(
-          user.user_id
-        );
-
-        if (resetTokens.length !== 0) {
-          const activeToken = resetTokens.find(
-            (token) => token.reset_token_status === true
-          );
-
-          if (activeToken) {
-            const oneDay = 24 * 60 * 60 * 1000;
-            const currentTime = new Date().getTime();
-            const tokenTime = new Date(activeToken.reset_token_date).getTime();
-            if (currentTime - tokenTime < oneDay) {
-              return res.status(200).json({
-                message:
-                  "Ya existe un enlace activo asociado a su perfil. Favor de checar su correo electrónico.",
-              });
-            } else {
-              // Expire the existing token
-              await updateResetToken(activeToken.reset_token_id, {
-                reset_token_status: false,
-              });
-            }
-          }
-        }
-        const resetToken = crypto.randomBytes(10).toString("hex");
-        await resetTokenController.insertResetToken({
-          user_id_fk: user.user_id,
-          reset_token: resetToken,
-          reset_token_date: new Date().getTime(),
-          reset_token_status: true,
-        });
-
-        const resetLink = `http://localhost:3000/ResetPassword/${resetToken}`;
-        await notificationServices.sendNotificationEmail(
-          user.email,
-          "Notificación de Restablecimiento de Contraseña",
-          `Se ha solicitado restablecer su contraseña. Por favor, haga clic en el enlace a continuación para restablecer su contraseña: \n${resetLink}\n Si no fue usted quien solicitó este cambio, por favor póngase en contacto con soporte.`
-        );
-        return res.status(200).json({
-          message:
-            "Correo electrónico enviado satisfactoriamente. Favor de checar su correo electrónico.",
-        });
-      } catch (error) {
-        console.error("Error restoring user:", error);
-        res
-          .status(500)
-          .json({ message: "Internal server error with restoring user" });
-      }
-    }); */
-
-    /**
-     * Reset Password
-     * Recuperación de enlace de URL del front
-     * Búsqueda en la base de datos
-     * Verificación si token está activo, en fecha y su verificación.
-     * Si lo está, indicar en la página su nueva contraseña
-     * Si no lo está, indica en la página que hubo un error y no se logró comprobar el enlace.
-     */
-
-    /*app.post("/reset-password", async (req, res) => {
-      try {
-        const { token } = req.body;
-        const resetTokens =
-          await resetTokenController.getAllResetTokenByResetToken(token);
-
-        if (resetTokens.length !== 0) {
-          const activeToken = resetTokens.find(
-            (token) => token.reset_token_status === true
-          );
-
-          if (activeToken) {
-            const oneDay = 24 * 60 * 60 * 1000;
-            const currentTime = new Date().getTime();
-            const tokenTime = new Date(activeToken.reset_token_date).getTime();
-
-            if (currentTime - tokenTime < oneDay) {
-              console.log("Updating password", activeToken);
-              const user = await userController.getUser(activeToken.user_id_fk);
-
-              if (user) {
-                const symbols = "@$!%+*?&";
-
-                const newPassword = generatePassword.generate({
-                  length: Math.floor(Math.random() * 11) + 9,
-                  numbers: true,
-                  symbols: true,
-                  uppercase: true,
-                  lowercase: true,
-                  strict: true, // Only include specified symbols
-                  excludeSimilarCharacters: true, // Exclude similar characters like 'l' and '1'
-                  symbols: symbols,
-                });
-
-                const hashedPassword = await bcrypt.hash(newPassword, salt);
-                const passwordMatch = await bcrypt.compare(
-                  newPassword,
-                  hashedPassword
-                );
-                console.log("PM", passwordMatch);
-                const updatedUser = await userController.updateUser(
-                  user.user_id,
-                  {
-                    pswrd: hashedPassword,
-                  }
-                );
-                const updatedResetToken =
-                  await resetTokenController.updateResetToken(
-                    activeToken.reset_token_id,
-                    {
-                      reset_token_status: false,
-                    }
-                  );
-                if (updatedUser && updatedResetToken) {
-                  return res.status(200).json({
-                    message: `Contraseña actualizada correctamente. Su nueva clave de acceso es: ${newPassword}`,
-                  });
-                } else {
-                  return res
-                    .status(500)
-                    .json({ message: "Error updating user" });
-                }
-              } else {
-                return res
-                  .status(404)
-                  .json({ message: "Usuario no encontrado" });
-              }
-            } else {
-              // Expire the existing token
-              await updateResetToken(activeToken.reset_token_id, {
-                reset_token_status: false,
-              });
-              console.log("Token inactivo encontrado");
-              return res
-                .status(500)
-                .json({ message: "Token inactivo encontrado" });
-            }
-          } else {
-            console.log("No se encontró un token activo");
-            return res
-              .status(500)
-              .json({ message: "No se encontró un token activo" });
-          }
-        } else {
-          console.log("Token no encontrado");
-          return res.status(404).json({ message: "Token no encontrado" });
-        }
-      } catch (error) {
-        console.error("Error restaurando usuario:", error);
-        return res.status(500).json({
-          message: "Error interno del servidor al restaurar el usuario",
-        });
-      }
-    }); */
+   
 
     app.use("/pmx-resp", verifyToken, routes);
   } catch (error) {}
 })();
 
-/*const { email } = req.body;
-        const user = await userController.getUserByEmail(email);
-        if (user) {
-          const symbols = "@$!%+*?&";
-          const newPassword = generatePassword.generate({
-            length: Math.floor(Math.random() * 11) + 9,
-            numbers: true,
-            symbols: true,
-            uppercase: true,
-            lowercase: true,
-            strict: true,
-            excludeSimilarCharacters: true,
-            symbols: symbols,
-          });
-          const hashedPassword = await bcrypt.hash(newPassword, salt);
-          const updatedUser = await userController.updateUser(user.user_id, {
-            pswrd: hashedPassword,
-          });
-          if (updatedUser) {
-            const backendNotification = "http://localhost:10333";
-            axios
-              .post(`${backendNotification}/send-email`, {
-                to: updatedUser.email,
-                subject: "Recuperación y Actualización de Contraseña",
-                text: `Su contraseña para el correo electrónico ${updatedUser.email} ha sido actualizada a ${newPassword} Por favor, verifique sus credenciales.`,
-              })
-              .then(() => {
-                res
-                  .status(200)
-                  .json({ message: "Password updated successfully" });
-              })
-              .catch(async (error) => {
-                await userController.updateUser(user.user_id, {
-                  pswrd: user.pswrd,
-                });
-                console.error("Error sending email: ", error);
-                res
-                  .status(500)
-                  .json({ message: "Failed to send email notification" });
-              });
-          }
-        } else {
-          res.status(404).json({ message: "User not found" });
-        }
-        */
 
 module.exports = app;

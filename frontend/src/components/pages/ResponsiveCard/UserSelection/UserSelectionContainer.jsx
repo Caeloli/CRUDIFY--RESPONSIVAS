@@ -71,7 +71,6 @@ export function UserSelectionContainer({
 
   const handleUserSelect = (id) => {
 
-    console.log("Hay servers data: ", usersServersData);
     const userServers = usersServersData.find(
       (userServers) => userServers.user_server_id === id
     );

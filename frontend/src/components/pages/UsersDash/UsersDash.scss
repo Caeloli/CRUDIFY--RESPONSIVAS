@@ -2,8 +2,8 @@
 @import "../../../assets/styles/mixins.scss";
 
 .userdash-nav-tab{
-    border-color: $primary-color !important;
     a{
-        color: $primary-color !important
+        color: $primary-color !important;
+        text-decoration: none;
     }
 }

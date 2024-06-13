@@ -16,7 +16,7 @@ export function UsersDash() {
           </Link>
         </Col>
         <Col className={`userdash-nav-tab ${location.pathname === "/Users/Authorization" && "border-bottom border-5"}`} md={2}>
-          <Link to={"/Users/Authorization"}>
+          <Link  to={"/Users/Authorization"} className="link-danger">
             <h5 className="text-center">Autorizaciones</h5>
           </Link>
         </Col>
