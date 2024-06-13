@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: pmxresp-backend-config
+  namespace: ns-gsd-spar-qa01
+data:
+  ADMINS: "daniel.hernandezs@pemex.com,emanuel.gutierrez@pemex.com"

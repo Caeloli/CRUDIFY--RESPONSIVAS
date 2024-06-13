@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pmxresp-frontend-deployment
+  namespace: ns-gsd-spar-qa01
+  labels:
+    app: pmxresp-frontend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: pmxresp-frontend
+  template:
+    metadata:
+      labels:
+        app: pmxresp-frontend
+    spec:
+      containers:
+      - name: pmxresp-frontend
+        image: harbor01.un.pemex.com/spar-qa/frontend-pmxresp:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 3000
+        resources:
+          requests:
+            ephemeral-storage: "500Mi"
+          limits:
+            ephemeral-storage: "1Gi"
+        ports:
+        - containerPort: 80

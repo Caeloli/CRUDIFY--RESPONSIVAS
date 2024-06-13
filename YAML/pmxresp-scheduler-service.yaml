@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: pmxresp-scheduler-service
+  namespace: ns-gsd-spar-qa01
+spec:
+  selector:
+    app: pmxresp-scheduler
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 80
+  type: ClusterIP
